@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicReference;
   private AtomicReference<ParseQueryController> queryController = new AtomicReference<>();
   private AtomicReference<ParseFileController> fileController = new AtomicReference<>();
   private AtomicReference<ParseAnalyticsController> analyticsController = new AtomicReference<>();
+  private AtomicReference<BuddyLocationsController> locationsController = new AtomicReference<>();
   private AtomicReference<ParseCloudCodeController> cloudCodeController = new AtomicReference<>();
   private AtomicReference<ParseConfigController> configController = new AtomicReference<>();
   private AtomicReference<ParsePushController> pushController = new AtomicReference<>();
@@ -196,6 +197,15 @@ import java.util.concurrent.atomic.AtomicReference;
           new ParseAnalyticsController(Parse.getEventuallyQueue()));
     }
     return analyticsController.get();
+  }
+
+  public BuddyLocationsController getLocationsController() {
+    if (locationsController.get() == null) {
+      // TODO(mengyan): Do not rely on Parse global
+      locationsController.compareAndSet(null,
+          new BuddyLocationsController(Parse.getEventuallyQueue()));
+    }
+    return locationsController.get();
   }
 
   public void registerAnalyticsController(ParseAnalyticsController controller) {

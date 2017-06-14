@@ -432,6 +432,8 @@ public class Parse {
       PushService.startServiceIfRequired(applicationContext);
     }
 
+    BuddyLocationTracker.getInstance().initialize();
+
     dispatchOnParseInitialized();
 
     // FYI we probably don't want to do this if we ever add other callbacks.
