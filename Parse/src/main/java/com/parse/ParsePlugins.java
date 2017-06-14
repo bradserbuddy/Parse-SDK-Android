@@ -190,7 +190,7 @@ class ParsePlugins {
             } catch (PackageManager.NameNotFoundException e) {
                 // Should never happen.
             }
-            return "Parse Android SDK " + ParseObject.VERSION_NAME + " (" + packageVersion +
+            return "Buddy Parse Android SDK " + ParseObject.VERSION_NAME + " (" + packageVersion +
                     ") API Level " + Build.VERSION.SDK_INT;
         }
 
