@@ -4,14 +4,14 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
 
-group = 'com.parse'
+group = 'com.buddy.parse'
 version = '1.16.0'
 
 ext {
     projDescription = 'A library that gives you access to the powerful Parse cloud platform from your Android app.'
     artifact = 'parse-android'
     projName = 'Parse-Android'
-    gitLink = 'https://github.com/parse-community/Parse-SDK-Android'
+    gitLink = 'https://github.com/BuddyPlatform/Parse-SDK-Android'
 }
 buildscript {
     repositories {
@@ -108,14 +108,14 @@ def pomConfig = {
     licenses {
         license {
             name 'BSD License'
-            url 'https://github.com/parse-community/Parse-SDK-Android/blob/master/LICENSE'
+            url 'https://github.com/BuddyPlatform/Parse-SDK-Android/blob/master/LICENSE'
             distribution 'repo'
         }
     }
 
     scm {
-       connection 'scm:git@github.com:parse-community/Parse-SDK-Android.git'
-       developerConnection 'scm:git@github.com:parse-community/Parse-SDK-Android.git'
+       connection 'scm:git@github.com:BuddyPlatform/Parse-SDK-Android.git'
+       developerConnection 'scm:git@github.com:BuddyPlatform/Parse-SDK-Android.git'
        url gitLink
     }
 
@@ -224,7 +224,7 @@ bintray {
         name = 'com.parse:parse-android'
         userOrg = 'parse'
         licenses = ['BSD License']
-        vcsUrl = 'https://github.com/parse-community/Parse-SDK-Android'
+        vcsUrl = 'https://github.com/BuddyPlatform/Parse-SDK-Android'
         version {
             name = project.version
             desc = projDescription
