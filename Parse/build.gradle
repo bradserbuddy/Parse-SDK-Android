@@ -58,6 +58,7 @@ dependencies {
     compile "com.android.support:support-annotations:$supportLibVersion"
     compile 'com.parse.bolts:bolts-tasks:1.4.0'
     compile "com.squareup.okhttp3:okhttp:$okhttpVersion"
+    compile fileTree(dir: 'lib', include: ['*.jar'])
 
     //Be aware, tests fail on 3.3.2 Wait to update until
     //java.lang.NoClassDefFoundError: android/content/pm/VersionedPackage
@@ -225,8 +226,8 @@ bintray {
     publish = true
     pkg {
         repo = 'maven'
-        name = 'com.parse:parse-android'
-        userOrg = 'parse'
+        name = 'com.buddy.parse:parse-android' //'com.buddy.parse:parse-android'
+        userOrg = 'buddyplatform'
         licenses = ['BSD License']
         vcsUrl = 'https://github.com/BuddyPlatform/Parse-SDK-Android'
         version {
@@ -235,13 +236,13 @@ bintray {
             released = new Date()
             vcsTag = project.version
 
-            // Sonatype username/passwrod must be set for this operation to happen
-            mavenCentralSync {
-              sync = true
-              user = ossrhUsername
-              password = ossrhPassword
-              close = '1' // release automatically
-           }
+            // Sonatype username/password must be set for this operation to happen
+   //         mavenCentralSync {
+   //           sync = true
+   //           user = ossrhUsername
+   //           password = ossrhPassword
+   //           close = '1' // release automatically
+   //        }
         }
     }
 }

@@ -18,12 +18,14 @@ android:
 
 before_install:
     - pip install --user codecov
+    - wget -P lib/ https://parseonbuddy.blob.core.windows.net/ppns/ppns-android-1.0.jar
+#    - mvn validate
 
 script:
   - ./gradlew clean testDebugUnitTest jacocoTestReport --info
 
 after_success:
-  - ./gradlew coveralls
+#  - ./gradlew coveralls
   - codecov
 # - ./scripts/publish_snapshot.sh
 
@@ -34,8 +36,9 @@ cache:
 
 deploy:
   provider: script
-# script: ./gradlew bintrayUpload
+  script: ./gradlew bintrayUpload
   skip_cleanup: true
   on:
-    branch: master
+    all_branches: true
+#   branch: master
     tags: true
