@@ -5,13 +5,15 @@ apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'com.buddy.parse'
-version = '1.15.8-SNAPSHOT'
+version = '1.15.8'
 
 ext {
     projDescription = 'A library that gives you access to the powerful Parse cloud platform from your Android app.'
     artifact = 'parse-android'
     projName = 'Parse-Android'
     gitLink = 'https://github.com/BuddyPlatform/Parse-SDK-Android'
+    BINTRAY_USER = project.hasProperty('BINTRAY_USER') ? project.BINTRAY_USER : null
+    BINTRAY_API_KEY = project.hasProperty('BINTRAY_API_KEY') ? project.BINTRAY_API_KEY : null
 }
 buildscript {
     repositories {
@@ -58,6 +60,7 @@ dependencies {
     compile "com.android.support:support-annotations:$supportLibVersion"
     compile 'com.parse.bolts:bolts-tasks:1.4.0'
     compile "com.squareup.okhttp3:okhttp:$okhttpVersion"
+    compile fileTree(dir: 'lib', include: ['*.jar'])
 
     //Be aware, tests fail on 3.3.2 Wait to update until
     //java.lang.NoClassDefFoundError: android/content/pm/VersionedPackage
@@ -217,16 +220,15 @@ coveralls.jacocoReportPath = "${buildDir}/reports/jacoco/jacocoTestReport/jacoco
 // Requires apply plugin: 'com.jfrog.bintray'
 
 bintray {
-    user = System.getenv('BINTRAY_USER')
-    key = System.getenv('BINTRAY_API_KEY')
-
+    user = BINTRAY_USER
+    key =  BINTRAY_API_KEY
     publications = ["MyPublication"]
 
     publish = true
     pkg {
         repo = 'maven'
-        name = 'com.parse:parse-android'
-        userOrg = 'parse'
+        name = 'parse-android' //'com.buddy.parse:parse-android'
+        userOrg = 'buddyplatform'
         licenses = ['BSD License']
         vcsUrl = 'https://github.com/BuddyPlatform/Parse-SDK-Android'
         version {
@@ -235,13 +237,13 @@ bintray {
             released = new Date()
             vcsTag = project.version
 
-            // Sonatype username/passwrod must be set for this operation to happen
-            mavenCentralSync {
-              sync = true
-              user = ossrhUsername
-              password = ossrhPassword
-              close = '1' // release automatically
-           }
+            // Sonatype username/password must be set for this operation to happen
+   //         mavenCentralSync {
+   //           sync = true
+   //           user = ossrhUsername
+   //           password = ossrhPassword
+   //           close = '1' // release automatically
+   //        }
         }
     }
 }
@@ -269,10 +271,12 @@ publishing {
 
                 //Iterate over the compile dependencies (we don't want the test ones), adding a <dependency> node for each
                 configurations.compile.allDependencies.each {
+		  if(it.name != 'unspecified'){
                     def dependencyNode = dependenciesNode.appendNode('dependency')
                     dependencyNode.appendNode('groupId', it.group)
                     dependencyNode.appendNode('artifactId', it.name)
                     dependencyNode.appendNode('version', it.version)
+		  }
                 }
 
             }
@@ -290,8 +294,8 @@ artifactory {
         repository {
             repoKey = 'oss-snapshot-local' // The Artifactory repository key to publish to
 
-            username = System.getenv('BINTRAY_USER')
-            password = System.getenv('BINTRAY_API_KEY')
+            username = BINTRAY_USER
+            password = BINTRAY_API_KEY
             maven = true
         }
         defaults {
