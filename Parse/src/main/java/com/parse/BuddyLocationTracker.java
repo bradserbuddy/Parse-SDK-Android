@@ -1,5 +1,6 @@
 package com.parse;
 
+import android.app.ActivityManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -16,7 +17,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 import android.telephony.CellIdentityCdma;
 import android.telephony.CellIdentityGsm;
 import android.telephony.CellIdentityLte;
@@ -26,11 +26,14 @@ import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
+import android.telephony.CellLocation;
 import android.telephony.CellSignalStrengthCdma;
 import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
 import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.TelephonyManager;
+import android.telephony.cdma.CdmaCellLocation;
+import android.telephony.gsm.GsmCellLocation;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -41,14 +44,21 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import bolts.Continuation;
 import bolts.Task;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import com.mapzen.android.lost.api.LostApiClient;
 
@@ -69,14 +79,16 @@ import com.mapzen.android.lost.api.LostApiClient;
 
 class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostApiClient.ConnectionCallbacks {
     public static final String TAG = "com.parse.BuddyLocationTracker";
-    private static long locationsBatchSize = 100; // 100 locations to be batched up in a post
-    private static long cellularBatchSize = 100; // 100 cellular info to be batched up in a post
     private Timer networkInfoLogTimer;
     private static BuddyUploadCriteria uploadCriteria = new BuddyUploadCriteria();
     private static BuddyDBHelper dbHelper;
     private static GoogleApiClient googleApiClient;
     private static LostApiClient lostApiClient;
-    private static final long cellularInfoLogTimeout = 1000; // how often to log. default 1sec
+    private static final String configUrl = "https://cdn.parse.buddy.com/sdk/config.json";
+    private BuddyPreferences preferences = new BuddyPreferences();
+    private BuddyConfiguration configuration;
+    private static ActivityManager activityManager;
+    private static boolean loadingNewConfiguration = false;
 
     public static BuddyLocationTracker getInstance() {
         return BuddyLocationTracker.Singleton.INSTANCE;
@@ -111,6 +123,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
             applicationsObject.put("apps", new JSONArray(appNames));
             long deviceIdLong = getDeviceId();
             applicationsObject.put("deviceId", deviceIdLong);
+            applicationsObject.put("buddySdkVersion", configuration.getVersion());
         } catch (JSONException e) {
             PLog.e(TAG, e.getMessage());
         }
@@ -118,172 +131,262 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
         trackEventInBackground("apps", applicationsObject, new SaveCallback() {
             @Override
             public void done(ParseException e) {
-            if (e == null) {
-                // success
-                PLog.i(TAG, "apps data uploaded");
-            } else {
-                PLog.i(TAG, "apps data upload failed");
-            }
+                if (e == null) {
+                    // success
+                    PLog.i(TAG, "apps data uploaded");
+                } else {
+                    PLog.i(TAG, "apps data upload failed");
+                    LoadNewConfiguration();
+                }
             }
         });
     }
 
-    private void setupCellularInfoLogTimer() {
+    private void stopCellularInfoLogTimer() {
+        if (networkInfoLogTimer != null) {
+            networkInfoLogTimer.cancel();
+            PLog.i(TAG, "log cellular info timer disabled");
+        }
+    }
+    private void startCellularInfoLogTimer() {
+        stopCellularInfoLogTimer();
+
         networkInfoLogTimer = new Timer();
         networkInfoLogTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                PLog.i(TAG, "log cellular info");
+                //PLog.i(TAG, "log cellular info");
                 logCellularInformation();
             }
-        }, 0, cellularInfoLogTimeout);
+        }, 0, configuration.getCommonCellularLogTimeout());
         PLog.i(TAG, "log cellular info timer enabled");
     }
 
     private void logCellularInformation() {
-        TelephonyManager telephonyManager = (TelephonyManager) Parse.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-        if (telephonyManager != null) {
-            try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                    SaveCellularInfoForApi17Plus(telephonyManager);
+        if (!isInBackground()) {
+            TelephonyManager telephonyManager = (TelephonyManager) Parse.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+            if (telephonyManager != null) {
+                try {
+                    JSONObject cellularInfoObject = getCellInformation(telephonyManager);
+
+                    try {
+                        String cellInfoJson = cellularInfoObject.toString(0);
+                        String uuid = UUID.randomUUID().toString();
+                        dbHelper.insertCellInformation(uuid, cellInfoJson);
+                        PLog.i(TAG, "cellular data saved");
+                    } catch (Exception exception) {
+                        PLog.e(TAG, exception.getMessage());
+                    }
                 }
-                else {
-                    // older apis
+                catch (Exception exception) {
+                    PLog.e(TAG, exception.getMessage());
                 }
-            }
-            catch (Exception exception) {
-                PLog.e(TAG, exception.getMessage());
             }
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
-    private void SaveCellularInfoForApi17Plus(TelephonyManager telephonyManager) {
-        List<CellInfo> allCellInfo = telephonyManager.getAllCellInfo();
-        if (allCellInfo != null) {
-            for (CellInfo cellInfo : allCellInfo) {
-                JSONObject cellularInfoObject = new JSONObject();
-                try {
-                    cellularInfoObject.put("IsRegistered", cellInfo.isRegistered());
-                } catch (JSONException e) {
-                    PLog.e(TAG, e.getMessage());
-                }
+    private JSONObject getCellInformation(TelephonyManager telephonyManager) {
+        JSONObject cellInformation = new JSONObject();
 
-                if (cellInfo instanceof CellInfoGsm) {
-                    PLog.i(TAG, "GSM network");
-                    CellInfoGsm cellInfoGsm = (CellInfoGsm) cellInfo;
-                    CellIdentityGsm identityGSM = cellInfoGsm.getCellIdentity();
-                    CellSignalStrengthGsm signalStrengthGsm = cellInfoGsm.getCellSignalStrength();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            int dataNetworkType = telephonyManager.getDataNetworkType();
+            try {
+                cellInformation.put("DataNetworkType",dataNetworkType);
+            } catch (JSONException e) {
+                PLog.e(TAG, e.getMessage());
+            }
+        }
 
+        JSONArray cellInformationArray = new JSONArray();
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            List<CellInfo> allCellInfo = telephonyManager.getAllCellInfo();
+
+            if (allCellInfo != null) {
+                for (CellInfo cellInfo : allCellInfo) {
+                    JSONObject cellularInfoObject = new JSONObject();
                     try {
-                        cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.GSM.toString());
-                        cellularInfoObject.put("Cid", identityGSM.getCid());
-                        cellularInfoObject.put("Mcc", identityGSM.getMcc());
-                        cellularInfoObject.put("Lac", identityGSM.getLac());
-                        cellularInfoObject.put("Mnc", identityGSM.getMnc());
-
-                        cellularInfoObject.put("AsuLevel", signalStrengthGsm.getAsuLevel());
-                        cellularInfoObject.put("Dbm", signalStrengthGsm.getDbm());
-                        cellularInfoObject.put("Level", signalStrengthGsm.getLevel());
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            cellularInfoObject.put("Arfcn", identityGSM.getArfcn());
-                            cellularInfoObject.put("Bsic", identityGSM.getBsic());
-                        }
-
-                    } catch (JSONException e) {
-                        PLog.e(TAG, e.getMessage());
-                    }
-                } else if (cellInfo instanceof CellInfoCdma) {
-                    PLog.i(TAG, "CDMA network");
-                    CellInfoCdma cellInfoCdma = (CellInfoCdma) cellInfo;
-                    CellIdentityCdma identityCdma = cellInfoCdma.getCellIdentity();
-                    CellSignalStrengthCdma signalStrengthCdma = cellInfoCdma.getCellSignalStrength();
-
-                    try {
-                        cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.CDMA.toString());
-                        cellularInfoObject.put("Latitude", identityCdma.getLatitude());
-                        cellularInfoObject.put("BasestationId", identityCdma.getBasestationId());
-                        cellularInfoObject.put("Longitude", identityCdma.getLongitude());
-                        cellularInfoObject.put("NetworkId", identityCdma.getNetworkId());
-                        cellularInfoObject.put("SystemId", identityCdma.getSystemId());
-                        cellularInfoObject.put("AsuLevel", signalStrengthCdma.getAsuLevel());
-                        cellularInfoObject.put("Dbm", signalStrengthCdma.getDbm());
-                        cellularInfoObject.put("Level", signalStrengthCdma.getLevel());
-
+                        cellularInfoObject.put("IsRegistered", cellInfo.isRegistered());
                     } catch (JSONException e) {
                         PLog.e(TAG, e.getMessage());
                     }
 
-                } else if (cellInfo instanceof CellInfoWcdma) {
-                    PLog.i(TAG, "WCDMA network");
-                    CellInfoWcdma cellInfoWcdma = (CellInfoWcdma) cellInfo;
-                    CellIdentityWcdma identityWcdma = null;
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                        identityWcdma = cellInfoWcdma.getCellIdentity();
-                        CellSignalStrengthWcdma signalStrengthWcdma = cellInfoWcdma.getCellSignalStrength();
+                    if (cellInfo instanceof CellInfoGsm) {
+                        //PLog.i(TAG, "GSM network");
+                        CellInfoGsm cellInfoGsm = (CellInfoGsm) cellInfo;
+                        CellIdentityGsm identityGSM = cellInfoGsm.getCellIdentity();
+                        CellSignalStrengthGsm signalStrengthGsm = cellInfoGsm.getCellSignalStrength();
 
                         try {
-                            cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.WCDMA.toString());
-                            cellularInfoObject.put("Cid", identityWcdma.getCid());
-                            cellularInfoObject.put("Mcc", identityWcdma.getMcc());
-                            cellularInfoObject.put("Lac", identityWcdma.getLac());
-                            cellularInfoObject.put("Mnc", identityWcdma.getMnc());
-                            cellularInfoObject.put("Psc", identityWcdma.getPsc());
+                            cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.GSM.toString());
+                            cellularInfoObject.put("CellId", identityGSM.getCid());
+                            cellularInfoObject.put("MobileCountryCode", identityGSM.getMcc());
+                            cellularInfoObject.put("LocationAreaCode", identityGSM.getLac());
+                            cellularInfoObject.put("MobileNetworkCode", identityGSM.getMnc());
+
+                            cellularInfoObject.put("AsuLevel", signalStrengthGsm.getAsuLevel());
+                            cellularInfoObject.put("SignalStrengthDbm", signalStrengthGsm.getDbm());
+                            cellularInfoObject.put("SignalLevel", signalStrengthGsm.getLevel());
 
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                cellularInfoObject.put("Uarfcn", identityWcdma.getUarfcn());
+                                cellularInfoObject.put("AbsoluteRFChannelNo", identityGSM.getArfcn());
+                                cellularInfoObject.put("BaseStationIdCode", identityGSM.getBsic());
                             }
 
-                            cellularInfoObject.put("AsuLevel", signalStrengthWcdma.getAsuLevel());
-                            cellularInfoObject.put("Dbm", signalStrengthWcdma.getDbm());
-                            cellularInfoObject.put("Level", signalStrengthWcdma.getLevel());
+                        } catch (JSONException e) {
+                            PLog.e(TAG, e.getMessage());
+                        }
+                    } else if (cellInfo instanceof CellInfoCdma) {
+                        //PLog.i(TAG, "CDMA network");
+                        CellInfoCdma cellInfoCdma = (CellInfoCdma) cellInfo;
+                        CellIdentityCdma identityCdma = cellInfoCdma.getCellIdentity();
+                        CellSignalStrengthCdma signalStrengthCdma = cellInfoCdma.getCellSignalStrength();
+
+                        try {
+                            cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.CDMA.toString());
+                            cellularInfoObject.put("Latitude", identityCdma.getLatitude());
+                            cellularInfoObject.put("BaseStationId", identityCdma.getBasestationId());
+                            cellularInfoObject.put("Longitude", identityCdma.getLongitude());
+                            cellularInfoObject.put("NetworkId", identityCdma.getNetworkId());
+                            cellularInfoObject.put("SystemId", identityCdma.getSystemId());
+                            cellularInfoObject.put("AsuLevel", signalStrengthCdma.getAsuLevel());
+                            cellularInfoObject.put("SignalStrengthDbm", signalStrengthCdma.getDbm());
+                            cellularInfoObject.put("SignalLevel", signalStrengthCdma.getLevel());
+
+                        } catch (JSONException e) {
+                            PLog.e(TAG, e.getMessage());
+                        }
+
+                    } else if (cellInfo instanceof CellInfoWcdma) {
+                        //PLog.i(TAG, "WCDMA network");
+                        CellInfoWcdma cellInfoWcdma = (CellInfoWcdma) cellInfo;
+                        CellIdentityWcdma identityWcdma = null;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                            identityWcdma = cellInfoWcdma.getCellIdentity();
+                            CellSignalStrengthWcdma signalStrengthWcdma = cellInfoWcdma.getCellSignalStrength();
+
+                            try {
+                                cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.WCDMA.toString());
+                                cellularInfoObject.put("CellId", identityWcdma.getCid());
+                                cellularInfoObject.put("MobileCountryCode", identityWcdma.getMcc());
+                                cellularInfoObject.put("LocationAreaCode", identityWcdma.getLac());
+                                cellularInfoObject.put("MobileNetworkCode", identityWcdma.getMnc());
+                                cellularInfoObject.put("PrimaryScramblingCode", identityWcdma.getPsc());
+
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    cellularInfoObject.put("UMTSAbsoluteRFChannelNo", identityWcdma.getUarfcn());
+                                }
+
+                                cellularInfoObject.put("AsuLevel", signalStrengthWcdma.getAsuLevel());
+                                cellularInfoObject.put("SignalStrengthDbm", signalStrengthWcdma.getDbm());
+                                cellularInfoObject.put("SignalLevel", signalStrengthWcdma.getLevel());
+
+                            } catch (JSONException e) {
+                                PLog.e(TAG, e.getMessage());
+                            }
+                        }
+                    } else if (cellInfo instanceof CellInfoLte) {
+                        //PLog.i(TAG, "Other Lte network");
+                        CellInfoLte cellInfoLte = (CellInfoLte) cellInfo;
+                        CellIdentityLte cellIdentityLte = cellInfoLte.getCellIdentity();
+                        CellSignalStrengthLte signalStrengthLte = cellInfoLte.getCellSignalStrength();
+
+                        try {
+                            cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.LTE.toString());
+                            cellularInfoObject.put("CellId", cellIdentityLte.getCi());
+                            cellularInfoObject.put("MobileCountryCode", cellIdentityLte.getMcc());
+                            cellularInfoObject.put("MobileNetworkCode", cellIdentityLte.getMnc());
+                            cellularInfoObject.put("PhysicalCellId", cellIdentityLte.getPci());
+                            cellularInfoObject.put("TrackingAreaCode", cellIdentityLte.getTac());
+
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                cellularInfoObject.put("AbsoluteRFChannelNo", cellIdentityLte.getEarfcn());
+                            }
+
+                            cellularInfoObject.put("AsuLevel", signalStrengthLte.getAsuLevel());
+                            cellularInfoObject.put("SignalStrengthDbm", signalStrengthLte.getDbm());
+                            cellularInfoObject.put("SignalLevel", signalStrengthLte.getLevel());
+                            cellularInfoObject.put("TimingAdvance", signalStrengthLte.getTimingAdvance());
 
                         } catch (JSONException e) {
                             PLog.e(TAG, e.getMessage());
                         }
                     }
-                } else if (cellInfo instanceof CellInfoLte) {
-                    PLog.i(TAG, "Other Lte network");
-                    CellInfoLte cellInfoLte = (CellInfoLte) cellInfo;
-                    CellIdentityLte cellIdentityLte = cellInfoLte.getCellIdentity();
-                    CellSignalStrengthLte signalStrengthLte = cellInfoLte.getCellSignalStrength();
 
-                    try {
-                        cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.LTE.toString());
-                        cellularInfoObject.put("Ci", cellIdentityLte.getCi());
-                        cellularInfoObject.put("Mcc", cellIdentityLte.getMcc());
-                        cellularInfoObject.put("Mnc", cellIdentityLte.getMnc());
-                        cellularInfoObject.put("Pci", cellIdentityLte.getPci());
-                        cellularInfoObject.put("Tac", cellIdentityLte.getTac());
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            cellularInfoObject.put("Earfcn", cellIdentityLte.getEarfcn());
-                        }
-
-                        cellularInfoObject.put("AsuLevel", signalStrengthLte.getAsuLevel());
-                        cellularInfoObject.put("Dbm", signalStrengthLte.getDbm());
-                        cellularInfoObject.put("Level", signalStrengthLte.getLevel());
-                        cellularInfoObject.put("TimingAdvance", signalStrengthLte.getTimingAdvance());
-
-                    } catch (JSONException e) {
-                        PLog.e(TAG, e.getMessage());
-                    }
-                }
-
-                if (cellularInfoObject.length() > 0) {
-                    try {
-                        String cellInfoJson = cellularInfoObject.toString(0);
-                        String uuid = UUID.randomUUID().toString();
-                        dbHelper.insertCellInformation(uuid, cellInfoJson);
-                        PLog.i(TAG, "network info saved to db ");
-                    } catch (Exception exception) {
-                        PLog.e(TAG, exception.getMessage());
+                    if (cellularInfoObject.length() > 0) {
+                        cellInformationArray.put(cellularInfoObject);
                     }
                 }
             }
         }
+        else {
+            // other api levels
+            CellLocation cellLocation = telephonyManager.getCellLocation();
+
+            if (cellLocation instanceof  CdmaCellLocation) {
+                CdmaCellLocation cdmaCellLocation = (CdmaCellLocation)cellLocation;
+                JSONObject cellularInfoObject = new JSONObject();
+
+                try {
+                    cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.CDMA.toString());
+                    cellularInfoObject.put("Latitude", cdmaCellLocation.getBaseStationLatitude());
+                    cellularInfoObject.put("BaseStationId", cdmaCellLocation.getBaseStationId());
+                    cellularInfoObject.put("Longitude", cdmaCellLocation.getBaseStationLongitude());
+                    cellularInfoObject.put("NetworkId", cdmaCellLocation.getNetworkId());
+                    cellularInfoObject.put("SystemId", cdmaCellLocation.getSystemId());
+
+                    cellInformationArray.put(cellularInfoObject);
+                } catch (JSONException e) {
+                    PLog.e(TAG, e.getMessage());
+                }
+            }
+            else  if (cellLocation instanceof  GsmCellLocation) {
+                GsmCellLocation gsmCellLocation = (GsmCellLocation)cellLocation;
+                JSONObject cellularInfoObject = new JSONObject();
+
+                try {
+                    cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.GSM.toString());
+                    cellularInfoObject.put("CellId", gsmCellLocation.getCid());
+                    cellularInfoObject.put("PrimaryScramblingCode", gsmCellLocation.getPsc());
+                    cellularInfoObject.put("LocationAreaCode", gsmCellLocation.getLac());
+
+                    cellInformationArray.put(cellularInfoObject);
+                } catch (JSONException e) {
+                    PLog.e(TAG, e.getMessage());
+                }
+            }
+        }
+        try {
+            cellInformation.put("data",cellInformationArray);
+        } catch (JSONException e) {
+            PLog.e(TAG, e.getMessage());
+        }
+
+        return cellInformation;
     }
+
+    private static boolean isInBackground() {
+        boolean isBackground = false;
+        List<ActivityManager.RunningAppProcessInfo> processList = activityManager.getRunningAppProcesses();
+        if (processList == null) {
+            // can't find the app, so it is background because we don't want to log cell info.
+            isBackground = true;
+        }
+        else
+        {
+            for (ActivityManager.RunningAppProcessInfo process : processList)
+            {
+                if (process.processName.startsWith(Parse.getApplicationContext().getPackageName()))
+                {
+                    isBackground = process.importance != ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND && process.importance != ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
+                    break;
+                }
+            }
+        }
+
+        return isBackground;
+    }
+
     private void uploadDeviceInformation() {
         JSONObject deviceInfoObject = new JSONObject();
         try {
@@ -293,6 +396,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
             deviceInfoObject.put("sdkVersion", android.os.Build.VERSION.RELEASE);
             deviceInfoObject.put("sdkVersionNumber", android.os.Build.VERSION.SDK_INT);
             deviceInfoObject.put("deviceId", deviceIdLong);
+            deviceInfoObject.put("buddySdkVersion", configuration.getVersion());
         } catch (JSONException e) {
             PLog.e(TAG, e.getMessage());
         }
@@ -305,6 +409,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                     PLog.i(TAG, "device data uploaded");
                 } else {
                     PLog.i(TAG, "device data upload failed");
+                    LoadNewConfiguration();
                 }
             }
         });
@@ -312,7 +417,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
 
     private void uploadLocations(final int loopCount) {
         PLog.i(TAG, "Uploading batch no. " + Integer.toString(loopCount));
-        final ArrayList<BuddyLocation> locations = dbHelper.getLocationsBatch(locationsBatchSize);
+        final ArrayList<BuddyLocation> locations = dbHelper.getLocationsBatch(configuration.getCommonLocationPushBatchSize());
         final int uploadableLocationCount = locations.size();
 
         if (uploadableLocationCount > 0) {
@@ -397,6 +502,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                 long deviceIdLong = getDeviceId();
                 parametersObject.put("deviceId", deviceIdLong);
                 parametersObject.put("device_status", deviceStatusObject);
+                parametersObject.put("buddySdkVersion", configuration.getVersion());
             } catch (JSONException e) {
                 PLog.e(TAG, e.getMessage());
             }
@@ -421,30 +527,120 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                             // all locations uploaded.
                             uploadCriteria.endUpload();
                         }
-
                     } else {
                         PLog.i(TAG, "Locations upload failed");
+                        uploadCriteria.endUpload();
+                        LoadNewConfiguration();
                     }
                 }
             });
         }
     }
 
+    private static synchronized boolean startLoadingNewConfiguration() {
+        boolean started = false;
+        if (!loadingNewConfiguration) {
+            loadingNewConfiguration = true;
+            started = true;
+        }
+
+        return started;
+    }
+
+    private static synchronized void stopLoadingNewConfiguration() {
+        if (loadingNewConfiguration) {
+            loadingNewConfiguration = false;
+        }
+    }
+
+    public void LoadNewConfiguration() {
+        if (!startLoadingNewConfiguration()) {
+            return;
+        }
+
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(configUrl)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                PLog.e(TAG, e.getMessage());
+            }
+
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String jsonData = response.body().string();
+                    try {
+                        JSONObject configJson = new JSONObject(jsonData);
+                        configuration = preferences.update(configJson);
+
+                        configureLocationLogging();
+                        configureCellularLogging();
+
+                    } catch (JSONException e) {
+                        PLog.e(TAG, e.getMessage());
+                    }
+                }
+                stopLoadingNewConfiguration();
+            }
+        });
+    }
+
+    private void configureCellularLogging() {
+        if (configuration.shouldLogCellular()) {
+            startCellularInfoLogTimer();
+        }
+        else {
+            stopCellularInfoLogTimer();
+        }
+    }
+
+    private void configureLocationLogging() {
+        if (configuration.shouldLogLocation()) {
+            if (googleApiClient == null) {
+                createGoogleApiClient();
+            }
+            else {
+                startGoogleApiClient();
+            }
+        }
+        else {
+            if (googleApiClient != null) {
+                stopGoogleApiClient();
+            }
+        }
+    }
+
+    private void stopGoogleApiClient() {
+        if (googleApiClient.isConnected() || googleApiClient.isConnecting()) {
+            googleApiClient.disconnect();
+            PLog.i(TAG, "google api client: disconnecting to services");
+        }
+    }
+    private void startGoogleApiClient() {
+        //stopGoogleApiClient();
+        if (!googleApiClient.isConnected() && !googleApiClient.isConnecting()) {
+            googleApiClient.connect();
+            PLog.i(TAG, "google api client: connecting to services");
+        }
+    }
+
     private void uploadCellular(final int loopCount) {
         PLog.i(TAG, "Uploading cellular batch no. " + Integer.toString(loopCount));
-        final ArrayList<JSONObject> cellularInfoItems = dbHelper.getCellularBatch(cellularBatchSize);
-        final int uploadableCellularItemsCount = cellularInfoItems.size();
+        final JSONArray cellularInfoItems = dbHelper.getCellularBatch(configuration.getCommonCellularPushBatchSize());
+        final int uploadableCellularItemsCount = cellularInfoItems.length();
 
         if (uploadableCellularItemsCount > 0) {
             PLog.i(TAG, "Push " + uploadableCellularItemsCount + " cellular records");
 
-            final String[] uploadableCellularIds = new String[uploadableCellularItemsCount];
+            final ArrayList<String> uploadableCellularIds = new ArrayList<>();
 
             for (int i = 0; i < uploadableCellularItemsCount; i++) {
-                JSONObject cellularInfoItem = cellularInfoItems.get(i);
                 try {
+                    JSONObject cellularInfoItem = cellularInfoItems.getJSONObject(i);
                     String uuid = (String) cellularInfoItem.get("uuid");
-                    uploadableCellularIds[i] = uuid;
+                    uploadableCellularIds.add(uuid);
                 } catch (JSONException e) {
                     PLog.e(TAG, e.getMessage());
                 }
@@ -456,6 +652,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                 long deviceIdLong = getDeviceId();
                 parametersObject.put("deviceId", deviceIdLong);
                 parametersObject.put("cellular", cellularInfoItems);
+                parametersObject.put("buddySdkVersion", configuration.getVersion());
             } catch (JSONException e) {
                 PLog.e(TAG, e.getMessage());
             }
@@ -483,6 +680,8 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
 
                     } else {
                         PLog.i(TAG, "Cellular upload failed");
+                        uploadCriteria.endUpload();
+                        LoadNewConfiguration();
                     }
                 }
             });
@@ -499,7 +698,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
     }
 
     Task<Void> trackEventInBackground(final String name,
-                                                    final JSONObject parametersObject) {
+                                      final JSONObject parametersObject) {
         if (name == null || name.trim().length() == 0) {
             throw new IllegalArgumentException("A name for the custom event must be provided.");
         }
@@ -590,10 +789,10 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
     private void upload() {
         if (uploadCriteria.canUpload()) {
             int availableLocations = dbHelper.locationsRowCount();
-            if (availableLocations > 0) {
+            if (availableLocations > 0 && configuration.shouldUploadLocation()) {
                 uploadCriteria.startUpload();
 
-                int loopCount = (int) Math.ceil((double)availableLocations / locationsBatchSize);
+                int loopCount = (int) Math.ceil((double)availableLocations / configuration.getCommonLocationPushBatchSize());
                 if (loopCount > 0) {
                     uploadLocations(loopCount);
                 }
@@ -601,36 +800,47 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
 
             // upload cellular information
             int availableCellularInfo = dbHelper.cellularRowCount();
-            if (availableCellularInfo > 0) {
+            if (availableCellularInfo > 0 && configuration.shouldUploadCellular()) {
                 uploadCriteria.startUpload();
 
-                int loopCount = (int) Math.ceil((double)availableCellularInfo / cellularBatchSize);
+                int loopCount = (int) Math.ceil((double)availableCellularInfo / configuration.getCommonCellularPushBatchSize());
                 if (loopCount > 0) {
                     uploadCellular(loopCount);
                 }
             }
         }
+        else {
+            // not ready to upload.
+            dbHelper.cleanUp();
+        }
     }
 
-    void setupLocationService() {
-        PLog.i(TAG, "setupLocationService");
+    void setupServices() {
+        PLog.i(TAG, "setupServices");
         dbHelper = new BuddyDBHelper(Parse.getApplicationContext());
-        setupCellularInfoLogTimer();
+        configuration = preferences.getConfig();
+        activityManager = (ActivityManager) Parse.getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+
+        if (configuration.shouldLogCellular()) {
+            startCellularInfoLogTimer();
+        }
         updateInitialPowerStatus();
 
         uploadDeviceInformation();
         uploadApplicationsList();
 
-        if (googleApiClient == null) {
+        configureLocationLogging();
+    }
 
-            PLog.i(TAG, "setupLocationService GoogleApiClient.Builder");
-            googleApiClient = new GoogleApiClient.Builder(Parse.getApplicationContext())
+    private void createGoogleApiClient() {
+        PLog.i(TAG, "setupServices GoogleApiClient.Builder");
+        googleApiClient = new GoogleApiClient.Builder(Parse.getApplicationContext())
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
                     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
-                        PLog.i(TAG, "setupLocationService: onConnectionFailed");
+                        PLog.i(TAG, "setupServices: onConnectionFailed");
 
                         if (connectionResult.getErrorCode() == ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED ||
                                 connectionResult.getErrorCode() == ConnectionResult.SERVICE_MISSING) {
@@ -646,11 +856,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                     }
                 }).addApi(LocationServices.API).build();
 
-            if (!googleApiClient.isConnected() && !googleApiClient.isConnecting()) {
-                googleApiClient.connect();
-                PLog.i(TAG, "setupLocationService: connecting to services");
-            }
-        }
+        startGoogleApiClient();
     }
 
     private void updateInitialPowerStatus() {
@@ -678,7 +884,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
 
     @Override
     public void onConnected() {
-        PLog.i(TAG, "setupLocationService onConnected");
+        PLog.i(TAG, "location service onConnected");
 
         try {
             // location service can throw an exception if permissions are not set
@@ -686,40 +892,34 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
             if (lostApiClient == null) {
                 Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
                 if (location != null) {
-                    PLog.i(TAG, "setupLocationService googleApiClient start location is " + location.getLatitude() + " , " + location.getLongitude());
+                    PLog.i(TAG, "setupServices googleApiClient start location is " + location.getLatitude() + " , " + location.getLongitude());
                 }
 
                 LocationRequest locationRequest = new LocationRequest();
-                locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-                locationRequest.setFastestInterval(1000 * 60);
-                locationRequest.setInterval(1000 * 60 * 10);
-                //locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                //locationRequest.setFastestInterval(1000 * 1);
-                //locationRequest.setInterval(1000 * 1);
+                locationRequest.setPriority((int) configuration.getAndroidLocationPowerAccuracy());
+                locationRequest.setFastestInterval(configuration.getAndroidLocationFastestUpdateInterval());
+                locationRequest.setInterval(configuration.getAndroidLocationUpdateInterval());
 
                 LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, getPendingIntent());
             } else {
                 Location location = com.mapzen.android.lost.api.LocationServices.FusedLocationApi.getLastLocation(lostApiClient);
                 if (location != null) {
-                    PLog.i(TAG, "setupLocationService lostApiClient start location is " + location.getLatitude() + " , " + location.getLongitude());
+                    PLog.i(TAG, "setupServices lostApiClient start location is " + location.getLatitude() + " , " + location.getLongitude());
                 }
 
                 com.mapzen.android.lost.api.LocationRequest locationRequest = com.mapzen.android.lost.api.LocationRequest.create();
-                locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-                locationRequest.setFastestInterval(1000 * 60);
-                locationRequest.setInterval(1000 * 60 * 10);
-                //locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                //locationRequest.setFastestInterval(1000 * 1);
-                //locationRequest.setInterval(1000 * 1);
+                locationRequest.setPriority((int) configuration.getAndroidLocationPowerAccuracy());
+                locationRequest.setFastestInterval(configuration.getAndroidLocationFastestUpdateInterval());
+                locationRequest.setInterval(configuration.getAndroidLocationUpdateInterval());
 
                 com.mapzen.android.lost.api.LocationServices.FusedLocationApi.requestLocationUpdates(lostApiClient, locationRequest, getPendingIntent());
             }
 
             setupEvents();
 
-            PLog.i(TAG, "setupLocationService: end GoogleApiClient.Builder");
+            PLog.i(TAG, "setupServices: end GoogleApiClient.Builder");
         } catch (SecurityException securityException) {
-            PLog.w(TAG, "setupLocationService: Missing ACCESS_FINE_LOCATION permission in the AndroidManifest");
+            PLog.w(TAG, "setupServices: Missing ACCESS_FINE_LOCATION permission in the AndroidManifest");
             googleApiClient.disconnect();
         }
     }

@@ -7,21 +7,21 @@ import com.parse.http.ParseHttpRequest;
 import org.json.JSONObject;
 
 
-class BuddyRESTLocationCommand extends ParseRESTCommand {
+class BuddyRESTCommand extends ParseRESTCommand {
 
     /* package for test */
-    private static final String LOCATIONPATH = "meta/%s";
+    private static final String META_PATH = "meta/%s";
 
-    /* package */ static BuddyRESTLocationCommand trackLocationEventCommand (
+    /* package */ static BuddyRESTCommand trackLocationEventCommand (
             String eventName, JSONObject parametersObject, String sessionToken) {
 
-        String httpPath = String.format(LOCATIONPATH, Uri.encode(eventName));
+        String httpPath = String.format(META_PATH, Uri.encode(eventName));
 
-        return new BuddyRESTLocationCommand(
+        return new BuddyRESTCommand(
                 httpPath, ParseHttpRequest.Method.POST, parametersObject, sessionToken);
     }
 
-    private BuddyRESTLocationCommand(
+    private BuddyRESTCommand(
             String httpPath,
             ParseHttpRequest.Method httpMethod,
             JSONObject parameters,

@@ -45,7 +45,7 @@ public class BuddyIntentService extends IntentService {
             if (intent != null && intent.getAction() != null &&
                     intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
 
-                BuddyLocationTracker.getInstance().setupLocationService();
+                BuddyLocationTracker.getInstance().setupServices();
             }
         }
 

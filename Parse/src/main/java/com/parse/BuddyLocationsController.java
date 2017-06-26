@@ -16,7 +16,7 @@ class BuddyLocationsController {
 
     Task<Void> trackLocationEventInBackground(final String name,
                                                      JSONObject parametersObject, String sessionToken) {
-        ParseRESTCommand command = BuddyRESTLocationCommand.trackLocationEventCommand(name, parametersObject,
+        ParseRESTCommand command = BuddyRESTCommand.trackLocationEventCommand(name, parametersObject,
                 sessionToken);
 
         Task<JSONObject> eventuallyTask = eventuallyQueue.enqueueEventuallyAsync(command, null);
