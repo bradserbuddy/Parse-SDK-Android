@@ -53,7 +53,7 @@ public class BuddyLocationRequestPermissionActivity extends AppCompatActivity
     }
 
     private void startService() {
-        BuddyLocationTracker.getInstance().setupLocationService();
+        BuddyLocationTracker.getInstance().setupServices();
 
         finish();
     }

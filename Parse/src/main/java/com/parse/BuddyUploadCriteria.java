@@ -5,28 +5,27 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.BatteryManager;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 class BuddyUploadCriteria {
     private BuddyPowerConnectionStatus powerStatus = BuddyPowerConnectionStatus.Unknown;
     private BuddyConnectivityStatus connectivityStatus = BuddyConnectivityStatus.Unknown;
     private boolean hasEnoughBattery = false;
-    private boolean isUploading = false;
-    private long lastUploadedEpoch = 0;
+    private static boolean isUploading = false;
+    private static int uploadJobsCount = 0;
     private final int milliSecondsPerDay = 24 * 60 * 60 * 1000;
-    private final String PREFS_BUDDY_LOCATION_TRACKER = "BuddyPreferences 09977e39-d487-48fb-97f1-1c018ea5e095"; // UUID to prevent name collision
-    private final String PREF_LAST_UPLOADED_EPOCH = "lastUploadedEpoch";
-    private SharedPreferences sharedPreferences;
+    private BuddyPreferences preferences = new BuddyPreferences();
+    private BuddyConfiguration configuration;
 
     BuddyUploadCriteria() {
-        sharedPreferences = Parse.getApplicationContext().getSharedPreferences(PREFS_BUDDY_LOCATION_TRACKER, 0);
+        configuration = preferences.getConfig();
+        long lastUploaded = configuration.getLastUploadedEpoch();
 
-        long lastUploaded = sharedPreferences.getLong(PREF_LAST_UPLOADED_EPOCH, 0);
         if (lastUploaded == 0) {
             // first time, so save the current time.
-            setLastUploadedEpoch(System.currentTimeMillis());
-        }
-        else {
-            lastUploadedEpoch = lastUploaded;
+            configuration = preferences.updateLastUploadedEpoch(System.currentTimeMillis());
         }
     }
 
@@ -68,7 +67,7 @@ class BuddyUploadCriteria {
         boolean result = false;
 
         if (!isUploading) {
-            if (System.currentTimeMillis() > getLastUploadedEpoch() + milliSecondsPerDay) {
+            if (System.currentTimeMillis() > configuration.getLastUploadedEpoch() + milliSecondsPerDay) {
                 if (connectivityStatus == BuddyConnectivityStatus.WifiConnected ||
                         connectivityStatus == BuddyConnectivityStatus.CellularConnected) {
                     if (powerStatus == BuddyPowerConnectionStatus.Connected || getHasEnoughBattery()) {
@@ -89,23 +88,17 @@ class BuddyUploadCriteria {
         return result;
     }
 
-    void startUpload() {
-        isUploading = true;
+    public synchronized void startUpload() {
+        uploadJobsCount++;
+        if (!isUploading) {
+            isUploading = true;
+        }
     }
 
-    void endUpload() {
-        setLastUploadedEpoch(System.currentTimeMillis());
-        isUploading = false;
-    }
-
-    private long getLastUploadedEpoch() {
-        return lastUploadedEpoch;
-    }
-
-    private void setLastUploadedEpoch(long lastUploaded) {
-        lastUploadedEpoch = lastUploaded;
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putLong(PREF_LAST_UPLOADED_EPOCH, lastUploaded);
-        editor.apply();
+    public synchronized void endUpload() {
+        configuration = preferences.updateLastUploadedEpoch(System.currentTimeMillis());
+        if (--uploadJobsCount == 0) {
+            isUploading = false;
+        }
     }
 }
