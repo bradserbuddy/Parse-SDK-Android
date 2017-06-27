@@ -1,7 +1,7 @@
 #!/bin/bash
 # Publishes SNAPSHOTs
 
-REPO_SLUG=parse-community/Parse-SDK-Android
+REPO_SLUG=BuddyPlatform/Parse-SDK-Android
 BRANCH=master
 
 set -e
