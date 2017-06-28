@@ -18,6 +18,7 @@ class BuddyUploadCriteria {
     private final int milliSecondsPerDay = 24 * 60 * 60 * 1000;
     private BuddyPreferences preferences = new BuddyPreferences();
     private BuddyConfiguration configuration;
+    public static final String TAG = "com.parse.BuddyUploadCriteria";
 
     BuddyUploadCriteria() {
         configuration = preferences.getConfig();
@@ -63,7 +64,7 @@ class BuddyUploadCriteria {
         powerStatus = status;
     }
 
-    boolean canUpload() {
+    public boolean canUpload() {
         boolean result = false;
 
         if (!isUploading) {
@@ -88,17 +89,39 @@ class BuddyUploadCriteria {
         return result;
     }
 
+    public void updateInitialPowerStatus() {
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = Parse.getApplicationContext().registerReceiver(null, ifilter);
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
+        if (isCharging) {
+            setPowerStatus(BuddyPowerConnectionStatus.Connected);
+        }
+        else {
+            setPowerStatus(BuddyPowerConnectionStatus.Disconnected);
+        }
+    }
+
     public synchronized void startUpload() {
         uploadJobsCount++;
         if (!isUploading) {
             isUploading = true;
         }
+        PLog.i(TAG, "startUpload - isUploading = " + String.valueOf(isUploading) + ", jobs = " + String.valueOf(uploadJobsCount));
     }
 
     public synchronized void endUpload() {
         configuration = preferences.updateLastUploadedEpoch(System.currentTimeMillis());
-        if (--uploadJobsCount == 0) {
-            isUploading = false;
+        if (isUploading) {
+            uploadJobsCount--;
+            if (uploadJobsCount == 0) {
+                isUploading = false;
+            }
         }
+        else {
+            uploadJobsCount = 0;
+        }
+
+        PLog.i(TAG, "endUpload - isUploading = " + String.valueOf(isUploading) + ", jobs = " + String.valueOf(uploadJobsCount));
     }
 }
