@@ -7,6 +7,7 @@ public class BuddyConfiguration {
     private long commonCellularPushBatchSize;
     private long commonMaxLocationRecords;
     private long commonMaxCellularRecords;
+    private long commonMaxErrorRecords;
     private long commonMaxRecordsToDelete;
     private long androidLocationPowerAccuracy;
     private long androidLocationFastestUpdateInterval;
@@ -135,5 +136,13 @@ public class BuddyConfiguration {
 
     public void setCommonMaxRecordsToDelete(long commonMaxRecordsToDelete) {
         this.commonMaxRecordsToDelete = commonMaxRecordsToDelete;
+    }
+
+    public long getCommonMaxErrorRecords() {
+        return commonMaxErrorRecords;
+    }
+
+    public void setCommonMaxErrorRecords(long commonMaxErrorRecords) {
+        this.commonMaxErrorRecords = commonMaxErrorRecords;
     }
 }

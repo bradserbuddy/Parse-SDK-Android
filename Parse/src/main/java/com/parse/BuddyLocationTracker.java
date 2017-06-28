@@ -3,6 +3,7 @@ package com.parse;
 import android.app.ActivityManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -50,7 +51,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import bolts.Continuation;
 import bolts.Task;
@@ -81,7 +81,6 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
     public static final String TAG = "com.parse.BuddyLocationTracker";
     private Timer networkInfoLogTimer;
     private static BuddyUploadCriteria uploadCriteria = new BuddyUploadCriteria();
-    private static BuddyDBHelper dbHelper;
     private static GoogleApiClient googleApiClient;
     private static LostApiClient lostApiClient;
     private static final String configUrl = "https://cdn.parse.buddy.com/sdk/config.json";
@@ -125,19 +124,19 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
             applicationsObject.put("deviceId", deviceIdLong);
             applicationsObject.put("buddySdkVersion", configuration.getVersion());
         } catch (JSONException e) {
-            PLog.e(TAG, e.getMessage());
+            BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
         }
 
         trackEventInBackground("apps", applicationsObject, new SaveCallback() {
             @Override
             public void done(ParseException e) {
-                if (e == null) {
-                    // success
-                    PLog.i(TAG, "apps data uploaded");
-                } else {
-                    PLog.i(TAG, "apps data upload failed");
-                    LoadNewConfiguration();
-                }
+            if (e == null) {
+                // success
+                PLog.i(TAG, "apps data uploaded");
+            } else {
+                PLog.i(TAG, "apps data upload failed");
+                LoadNewConfiguration();
+            }
             }
         });
     }
@@ -156,13 +155,13 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
             @Override
             public void run() {
                 //PLog.i(TAG, "log cellular info");
-                logCellularInformation();
+                saveCellularInformation();
             }
         }, 0, configuration.getCommonCellularLogTimeout());
         PLog.i(TAG, "log cellular info timer enabled");
     }
 
-    private void logCellularInformation() {
+    private void saveCellularInformation() {
         if (!isInBackground()) {
             TelephonyManager telephonyManager = (TelephonyManager) Parse.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
             if (telephonyManager != null) {
@@ -170,16 +169,19 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                     JSONObject cellularInfoObject = getCellInformation(telephonyManager);
 
                     try {
-                        String cellInfoJson = cellularInfoObject.toString(0);
-                        String uuid = UUID.randomUUID().toString();
-                        dbHelper.insertCellInformation(uuid, cellInfoJson);
+                        String body = cellularInfoObject.toString(0);
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put(BuddyCellularTableType.Uuid, UUID.randomUUID().toString());
+                        contentValues.put(BuddyCellularTableType.Body, body);
+
+                        BuddyDBHelper.getInstance().save(BuddyTableType.Cellular, contentValues);
                         PLog.i(TAG, "cellular data saved");
-                    } catch (Exception exception) {
-                        PLog.e(TAG, exception.getMessage());
+                    } catch (Exception e) {
+                        BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
                     }
                 }
-                catch (Exception exception) {
-                    PLog.e(TAG, exception.getMessage());
+                catch (Exception e) {
+                    BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
                 }
             }
         }
@@ -193,7 +195,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
             try {
                 cellInformation.put("DataNetworkType",dataNetworkType);
             } catch (JSONException e) {
-                PLog.e(TAG, e.getMessage());
+                BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
             }
         }
 
@@ -208,7 +210,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                     try {
                         cellularInfoObject.put("IsRegistered", cellInfo.isRegistered());
                     } catch (JSONException e) {
-                        PLog.e(TAG, e.getMessage());
+                        BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
                     }
 
                     if (cellInfo instanceof CellInfoGsm) {
@@ -234,7 +236,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                             }
 
                         } catch (JSONException e) {
-                            PLog.e(TAG, e.getMessage());
+                            BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
                         }
                     } else if (cellInfo instanceof CellInfoCdma) {
                         //PLog.i(TAG, "CDMA network");
@@ -254,7 +256,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                             cellularInfoObject.put("SignalLevel", signalStrengthCdma.getLevel());
 
                         } catch (JSONException e) {
-                            PLog.e(TAG, e.getMessage());
+                            BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
                         }
 
                     } else if (cellInfo instanceof CellInfoWcdma) {
@@ -282,7 +284,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                                 cellularInfoObject.put("SignalLevel", signalStrengthWcdma.getLevel());
 
                             } catch (JSONException e) {
-                                PLog.e(TAG, e.getMessage());
+                                BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
                             }
                         }
                     } else if (cellInfo instanceof CellInfoLte) {
@@ -309,7 +311,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                             cellularInfoObject.put("TimingAdvance", signalStrengthLte.getTimingAdvance());
 
                         } catch (JSONException e) {
-                            PLog.e(TAG, e.getMessage());
+                            BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
                         }
                     }
 
@@ -337,7 +339,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
 
                     cellInformationArray.put(cellularInfoObject);
                 } catch (JSONException e) {
-                    PLog.e(TAG, e.getMessage());
+                    BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
                 }
             }
             else  if (cellLocation instanceof  GsmCellLocation) {
@@ -352,14 +354,14 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
 
                     cellInformationArray.put(cellularInfoObject);
                 } catch (JSONException e) {
-                    PLog.e(TAG, e.getMessage());
+                    BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
                 }
             }
         }
         try {
             cellInformation.put("data",cellInformationArray);
         } catch (JSONException e) {
-            PLog.e(TAG, e.getMessage());
+            BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
         }
 
         return cellInformation;
@@ -398,143 +400,111 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
             deviceInfoObject.put("deviceId", deviceIdLong);
             deviceInfoObject.put("buddySdkVersion", configuration.getVersion());
         } catch (JSONException e) {
-            PLog.e(TAG, e.getMessage());
+            BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
         }
 
         trackEventInBackground("device", deviceInfoObject, new SaveCallback() {
             @Override
             public void done(ParseException e) {
-                if (e == null) {
-                    // success
-                    PLog.i(TAG, "device data uploaded");
-                } else {
-                    PLog.i(TAG, "device data upload failed");
-                    LoadNewConfiguration();
-                }
+            if (e == null) {
+                // success
+                PLog.i(TAG, "device data uploaded");
+            } else {
+                PLog.i(TAG, "device data upload failed");
+                LoadNewConfiguration();
+            }
             }
         });
     }
 
     private void uploadLocations(final int loopCount) {
         PLog.i(TAG, "Uploading batch no. " + Integer.toString(loopCount));
-        final ArrayList<BuddyLocation> locations = dbHelper.getLocationsBatch(configuration.getCommonLocationPushBatchSize());
-        final int uploadableLocationCount = locations.size();
+        final JSONObject locationInformation = BuddyDBHelper.getInstance().get(BuddyTableType.Location,
+                configuration.getCommonLocationPushBatchSize());
 
-        if (uploadableLocationCount > 0) {
-            PLog.i(TAG, "Push " + uploadableLocationCount + " locations");
-
-            final String[] uploadableLocationIds = new String[uploadableLocationCount];
-            JSONObject parametersObject = new JSONObject();
-            JSONArray parametersArray = new JSONArray();
-
-            for (int i = 0; i < uploadableLocationCount; i++) {
-                BuddyLocation location = locations.get(i);
-                double longitude = location.getLongitude();
-                long timestamp = location.getTimestamp();
-                double latitude = location.getLatitude();
-                String locationUuid = location.getUuid();
-                float accuracy = location.getAccuracy();
-                double altitude = location.getAltitude();
-                float bearing = location.getBearing();
-
-                float speed = location.getSpeed();
-                // float bearingAccuracy = location.getBearingAccuracy();
-                // float speedAccuracyMetersPerSecond = location.getSpeedAccuracyMetersPerSecond();
-                // float verticalAccuracyMeters = location.getVerticalAccuracyMeters();
-
-                //PLog.i(TAG, location.getUuid() + " , " + location.getLatitude() + " , " + location.getLongitude() + " , " + location.getTimestamp());
-                uploadableLocationIds[i] = locationUuid;
-                JSONObject locationObject = new JSONObject();
-                try {
-                    locationObject.put("uuid", locationUuid);
-                    locationObject.put("latitude", latitude);
-                    locationObject.put("longitude", longitude);
-                    locationObject.put("timestamp", timestamp);
-                    locationObject.put("accuracy", accuracy);
-                    locationObject.put("altitude", altitude);
-                    locationObject.put("bearing", bearing);
-                    locationObject.put("speed", speed);
-                    // locationObject.put("bearingAccuracy",bearingAccuracy);
-                    // locationObject.put("speedAccuracyMetersPerSecond",speedAccuracyMetersPerSecond);
-                    // locationObject.put("verticalAccuracyMeters",verticalAccuracyMeters);
-                    parametersArray.put(i, locationObject);
-                } catch (JSONException e) {
-                    PLog.e(TAG, e.getMessage());
-                }
-            }
-
-            // device data for testing
-            JSONObject deviceStatusObject = new JSONObject();
+        if (locationInformation.has("items") && locationInformation.has("ids")) {
             try {
-                String network = "disconnected";
-                BuddyConnectivityStatus connectivityStatus = uploadCriteria.getConnectivityStatus();
-                if (connectivityStatus == BuddyConnectivityStatus.CellularConnected) {
-                    network = "cellular";
-                }
-                else if (connectivityStatus == BuddyConnectivityStatus.WifiConnected) {
-                    network = "wifi";
-                }
-                deviceStatusObject.put("network", network);
+                final JSONArray items = (JSONArray) locationInformation.get("items");
+                if (items.length() > 0) {
+                    final String[] ids = (String[]) locationInformation.get("ids");
+                    JSONObject deviceStatus = getDeviceStatus();
+                    JSONObject parametersObject = new JSONObject();
+                    parametersObject.put("locations", items);
+                    long deviceIdLong = getDeviceId();
+                    parametersObject.put("deviceId", deviceIdLong);
+                    parametersObject.put("device_status", deviceStatus);
+                    parametersObject.put("buddySdkVersion", configuration.getVersion());
 
-                String power = "unknown";
-                BuddyPowerConnectionStatus powerConnectionStatus = uploadCriteria.getPowerStatus();
-                if (powerConnectionStatus == BuddyPowerConnectionStatus.Connected) {
-                    power = "charging";
-                }
-                else if (powerConnectionStatus == BuddyPowerConnectionStatus.Disconnected) {
-                    power = "not charging";
-                }
-                deviceStatusObject.put("power", power);
+                    trackEventInBackground("location", parametersObject, new SaveCallback() {
+                        @Override
+                        public void done(ParseException e) {
+                        if (e == null) {
+                            // success
+                            PLog.i(TAG, "locations uploaded");
+                            PLog.i(TAG, "deleting uploaded locations");
+                            long rowsAffected = BuddyDBHelper.getInstance().delete(BuddyTableType.Location, ids);
 
-                String battery = "unknown";
-                int batteryPercentage = uploadCriteria.getBatteryPercentage();
-                if (batteryPercentage != -1) {
-                    battery =  String.valueOf(batteryPercentage);
-                }
-                deviceStatusObject.put("battery", battery);
+                            if (items.length() == rowsAffected) {
+                                PLog.i(TAG, "locations deleted");
+                            }
 
-            } catch (JSONException e) {
-                PLog.e(TAG, e.getMessage());
-            }
-
-            try {
-                parametersObject.put("locations", parametersArray);
-                long deviceIdLong = getDeviceId();
-                parametersObject.put("deviceId", deviceIdLong);
-                parametersObject.put("device_status", deviceStatusObject);
-                parametersObject.put("buddySdkVersion", configuration.getVersion());
-            } catch (JSONException e) {
-                PLog.e(TAG, e.getMessage());
-            }
-
-            trackEventInBackground("location", parametersObject, new SaveCallback() {
-                @Override
-                public void done(ParseException e) {
-                    if (e == null) {
-                        // success
-                        PLog.i(TAG, "locations uploaded");
-                        PLog.i(TAG, "deleting uploaded locations");
-                        long rowsAffected = dbHelper.deleteLocations(uploadableLocationIds);
-
-                        if (uploadableLocationCount == rowsAffected) {
-                            PLog.i(TAG, "locations deleted");
-                        }
-
-                        if (loopCount -  1 != 0) {
-                            uploadLocations(loopCount -  1);
-                        }
-                        else {
-                            // all locations uploaded.
+                            if (loopCount -  1 != 0) {
+                                uploadLocations(loopCount -  1);
+                            }
+                            else {
+                                // all locations uploaded.
+                                uploadCriteria.endUpload();
+                            }
+                        } else {
+                            PLog.i(TAG, "Locations upload failed");
                             uploadCriteria.endUpload();
+                            LoadNewConfiguration();
                         }
-                    } else {
-                        PLog.i(TAG, "Locations upload failed");
-                        uploadCriteria.endUpload();
-                        LoadNewConfiguration();
-                    }
+                        }
+                    });
                 }
-            });
+
+            } catch (Exception e) {
+                BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
+            }
         }
+    }
+
+    private JSONObject getDeviceStatus() {
+        JSONObject deviceStatus = new JSONObject();
+        try {
+            String network = "disconnected";
+            BuddyConnectivityStatus connectivityStatus = uploadCriteria.getConnectivityStatus();
+            if (connectivityStatus == BuddyConnectivityStatus.CellularConnected) {
+                network = "cellular";
+            }
+            else if (connectivityStatus == BuddyConnectivityStatus.WifiConnected) {
+                network = "wifi";
+            }
+            deviceStatus.put("network", network);
+
+            String power = "unknown";
+            BuddyPowerConnectionStatus powerConnectionStatus = uploadCriteria.getPowerStatus();
+            if (powerConnectionStatus == BuddyPowerConnectionStatus.Connected) {
+                power = "charging";
+            }
+            else if (powerConnectionStatus == BuddyPowerConnectionStatus.Disconnected) {
+                power = "not charging";
+            }
+            deviceStatus.put("power", power);
+
+            String battery = "unknown";
+            int batteryPercentage = uploadCriteria.getBatteryPercentage();
+            if (batteryPercentage != -1) {
+                battery =  String.valueOf(batteryPercentage);
+            }
+            deviceStatus.put("battery", battery);
+
+        } catch (JSONException e) {
+            BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
+        }
+
+        return deviceStatus;
     }
 
     private static synchronized boolean startLoadingNewConfiguration() {
@@ -565,7 +535,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
 
         client.newCall(request).enqueue(new Callback() {
             @Override public void onFailure(Call call, IOException e) {
-                PLog.e(TAG, e.getMessage());
+                BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
             }
 
             @Override public void onResponse(Call call, Response response) throws IOException {
@@ -579,7 +549,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                         configureCellularLogging();
 
                     } catch (JSONException e) {
-                        PLog.e(TAG, e.getMessage());
+                        BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
                     }
                 }
                 stopLoadingNewConfiguration();
@@ -628,63 +598,54 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
 
     private void uploadCellular(final int loopCount) {
         PLog.i(TAG, "Uploading cellular batch no. " + Integer.toString(loopCount));
-        final JSONArray cellularInfoItems = dbHelper.getCellularBatch(configuration.getCommonCellularPushBatchSize());
-        final int uploadableCellularItemsCount = cellularInfoItems.length();
+        final JSONObject cellularInfoItems = BuddyDBHelper.getInstance().get(BuddyTableType.Cellular,
+                configuration.getCommonCellularPushBatchSize());
 
-        if (uploadableCellularItemsCount > 0) {
-            PLog.i(TAG, "Push " + uploadableCellularItemsCount + " cellular records");
-
-            final ArrayList<String> uploadableCellularIds = new ArrayList<>();
-
-            for (int i = 0; i < uploadableCellularItemsCount; i++) {
-                try {
-                    JSONObject cellularInfoItem = cellularInfoItems.getJSONObject(i);
-                    String uuid = (String) cellularInfoItem.get("uuid");
-                    uploadableCellularIds.add(uuid);
-                } catch (JSONException e) {
-                    PLog.e(TAG, e.getMessage());
-                }
-            }
-
-            JSONObject parametersObject = new JSONObject();
+        if (cellularInfoItems.has("items") && cellularInfoItems.has("ids")) {
             try {
+                final JSONArray items = (JSONArray) cellularInfoItems.get("items");
+                if (items.length() > 0) {
+                    final String[] ids = (String[]) cellularInfoItems.get("ids");
 
-                long deviceIdLong = getDeviceId();
-                parametersObject.put("deviceId", deviceIdLong);
-                parametersObject.put("cellular", cellularInfoItems);
-                parametersObject.put("buddySdkVersion", configuration.getVersion());
-            } catch (JSONException e) {
-                PLog.e(TAG, e.getMessage());
-            }
+                    JSONObject parametersObject = new JSONObject();
+                    long deviceIdLong = getDeviceId();
+                    parametersObject.put("deviceId", deviceIdLong);
+                    parametersObject.put("cellular", items);
+                    parametersObject.put("buddySdkVersion", configuration.getVersion());
 
-            trackEventInBackground("cellular", parametersObject, new SaveCallback() {
-                @Override
-                public void done(ParseException e) {
-                    if (e == null) {
-                        // success
-                        PLog.i(TAG, "cellular info uploaded");
-                        PLog.i(TAG, "deleting uploaded cellular info");
-                        long rowsAffected = dbHelper.deleteCellular(uploadableCellularIds);
+                    trackEventInBackground("cellular", parametersObject, new SaveCallback() {
+                        @Override
+                        public void done(ParseException e) {
+                            if (e == null) {
+                                // success
+                                PLog.i(TAG, "cellular info uploaded");
+                                PLog.i(TAG, "deleting uploaded cellular info");
+                                long rowsAffected = BuddyDBHelper.getInstance().delete(BuddyTableType.Cellular, ids);
 
-                        if (uploadableCellularItemsCount == rowsAffected) {
-                            PLog.i(TAG, "cellular info deleted");
+                                if (items.length() == rowsAffected) {
+                                    PLog.i(TAG, "cellular info deleted");
+                                }
+
+                                if (loopCount -  1 != 0) {
+                                    uploadCellular(loopCount -  1);
+                                }
+                                else {
+                                    // all cellular info uploaded.
+                                    uploadCriteria.endUpload();
+                                }
+
+                            } else {
+                                PLog.i(TAG, "Cellular upload failed");
+                                uploadCriteria.endUpload();
+                                LoadNewConfiguration();
+                            }
                         }
-
-                        if (loopCount -  1 != 0) {
-                            uploadCellular(loopCount -  1);
-                        }
-                        else {
-                            // all cellular info uploaded.
-                            uploadCriteria.endUpload();
-                        }
-
-                    } else {
-                        PLog.i(TAG, "Cellular upload failed");
-                        uploadCriteria.endUpload();
-                        LoadNewConfiguration();
-                    }
+                    });
                 }
-            });
+            }
+            catch(Exception e) {
+                BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
+            }
         }
     }
 
@@ -788,7 +749,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
 
     private void upload() {
         if (uploadCriteria.canUpload()) {
-            int availableLocations = dbHelper.locationsRowCount();
+            int availableLocations = BuddyDBHelper.getInstance().rowCount(BuddyTableType.Location);
             if (availableLocations > 0 && configuration.shouldUploadLocation()) {
                 uploadCriteria.startUpload();
 
@@ -799,7 +760,7 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
             }
 
             // upload cellular information
-            int availableCellularInfo = dbHelper.cellularRowCount();
+            int availableCellularInfo = BuddyDBHelper.getInstance().rowCount(BuddyTableType.Cellular);
             if (availableCellularInfo > 0 && configuration.shouldUploadCellular()) {
                 uploadCriteria.startUpload();
 
@@ -811,25 +772,68 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
         }
         else {
             // not ready to upload.
-            dbHelper.cleanUp();
+            BuddyDBHelper.getInstance().cleanUp();
         }
     }
 
     void setupServices() {
         PLog.i(TAG, "setupServices");
-        dbHelper = new BuddyDBHelper(Parse.getApplicationContext());
         configuration = preferences.getConfig();
         activityManager = (ActivityManager) Parse.getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
 
         if (configuration.shouldLogCellular()) {
             startCellularInfoLogTimer();
         }
-        updateInitialPowerStatus();
+        uploadCriteria.updateInitialPowerStatus();
 
         uploadDeviceInformation();
         uploadApplicationsList();
+        uploadErrors();
 
         configureLocationLogging();
+    }
+
+    private void uploadErrors() {
+        PLog.i(TAG, "Uploading error logs");
+        final JSONObject errors = BuddyDBHelper.getInstance().get(BuddyTableType.Error, 0);
+
+        if (errors.has("items") && errors.has("ids")) {
+            try {
+                final JSONArray items = (JSONArray) errors.get("items");
+                if (items.length() > 0) {
+                    final String[] ids = (String[]) errors.get("ids");
+                    JSONObject parametersObject = new JSONObject();
+                    parametersObject.put("errors", items);
+                    long deviceIdLong = getDeviceId();
+                    parametersObject.put("deviceId", deviceIdLong);
+                    parametersObject.put("buddySdkVersion", configuration.getVersion());
+
+                    trackEventInBackground("error", parametersObject, new SaveCallback() {
+                        @Override
+                        public void done(ParseException e) {
+                        if (e == null) {
+                            // success
+                            PLog.i(TAG, "errors uploaded");
+                            PLog.i(TAG, "deleting uploaded errors");
+                            long rowsAffected = BuddyDBHelper.getInstance().delete(BuddyTableType.Error, ids);
+
+                            if (items.length() == rowsAffected) {
+                                PLog.i(TAG, "errors deleted");
+                            }
+                            uploadCriteria.endUpload();
+                        } else {
+                            PLog.i(TAG, "errors upload failed");
+                            uploadCriteria.endUpload();
+                            LoadNewConfiguration();
+                        }
+                        }
+                    });
+                }
+
+            } catch (Exception e) {
+                BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
+            }
+        }
     }
 
     private void createGoogleApiClient() {
@@ -857,19 +861,6 @@ class BuddyLocationTracker implements GoogleApiClient.ConnectionCallbacks, LostA
                 }).addApi(LocationServices.API).build();
 
         startGoogleApiClient();
-    }
-
-    private void updateInitialPowerStatus() {
-        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = Parse.getApplicationContext().registerReceiver(null, ifilter);
-        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
-        if (isCharging) {
-            uploadCriteria.setPowerStatus(BuddyPowerConnectionStatus.Connected);
-        }
-        else {
-            uploadCriteria.setPowerStatus(BuddyPowerConnectionStatus.Disconnected);
-        }
     }
 
     @Override

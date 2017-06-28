@@ -13,71 +13,91 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 
-class BuddyDBHelper extends SQLiteOpenHelper {
+public class BuddyDBHelper extends SQLiteOpenHelper {
+    private static BuddyDBHelper Instance;
     public static final String TAG = "com.parse.BuddyDBHelper";
     private static final String DATABASE_NAME = "Buddy.db";
-    private static final String LOCATIONS_TABLE_NAME = "locations";
-    private static final String LOCATIONS_COLUMN_UUID = "uuid";
-    private static final String LOCATIONS_COLUMN_TIMESTAMP = "timestamp";
-    private static final String LOCATIONS_COLUMN_LATITUDE = "latitude";
-    private static final String LOCATIONS_COLUMN_LONGITUDE = "longitude";
-    private static final String LOCATIONS_COLUMN_ACCURACY = "accuracy";
-    private static final String LOCATIONS_COLUMN_ALTITUDE = "altitude";
-    private static final String LOCATIONS_COLUMN_BEARING = "bearing";
-    private static final String LOCATIONS_COLUMN_BEARING_ACCURACY = "bearingAccuracy";
-    private static final String LOCATIONS_COLUMN_SPEED = "speed";
-    private static final String LOCATIONS_COLUMN_SPEED_ACCURACY = "speedAccuracyMetersPerSecond";
-    private static final String LOCATIONS_COLUMN_VERTICAL_ACCURACY = "verticalAccuracyMeters";
-
-    private static final String CELLULAR_TABLE_NAME = "cellular";
-    private static final String CELLULAR_COLUMN_UUID = "uuid";
-    private static final String CELLULAR_COLUMN_TIMESTAMP = "timestamp";
-    private static final String CELLULAR_COLUMN_BODY = "body";
     private static SQLiteDatabase db;
+    private static int dbVersion = 1; // bump up on every release
 
-    BuddyDBHelper(Context context) {
-        super(context, DATABASE_NAME , null, 2);
+    public static synchronized BuddyDBHelper getInstance() {
+        if (Instance == null) {
+            Instance = new BuddyDBHelper(Parse.getApplicationContext());
+        }
+        return Instance;
+    }
+    private BuddyDBHelper(Context context) {
+        super(context, DATABASE_NAME , null, dbVersion);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        CreateLocationsTable(db);
-        CreateCellularTable(db);
+        try {
+            CreateLocationsTable(db);
+            CreateCellularTable(db);
+            CreateErrorTable(db);
+        }
+        catch (Exception e) {
+            PLog.e(TAG, e.getMessage());
+        }
+    }
+
+    private void CreateErrorTable(SQLiteDatabase db) {
+        String query = String.format("create table %s ( %s text primary key, %s integer(4) default " +
+                        "(cast(strftime('%%s', 'now') as int)) , %s text )",
+                BuddyErrorTableType.TableName, BuddyErrorTableType.Uuid, BuddyErrorTableType.Timestamp,
+                BuddyErrorTableType.Message);
+        db.execSQL(query);
     }
 
     private void CreateLocationsTable(SQLiteDatabase db) {
         String query = String.format("create table %s ( %s text primary key, %s integer(4) default " +
                         "(cast(strftime('%%s', 'now') as int)) , %s real, %s real, %s real, %s real, " +
                         "%s real, %s real, %s real, %s real, %s real )",
-                LOCATIONS_TABLE_NAME, LOCATIONS_COLUMN_UUID, LOCATIONS_COLUMN_TIMESTAMP,
-                LOCATIONS_COLUMN_LATITUDE, LOCATIONS_COLUMN_LONGITUDE, LOCATIONS_COLUMN_ACCURACY,
-                LOCATIONS_COLUMN_ALTITUDE, LOCATIONS_COLUMN_BEARING, LOCATIONS_COLUMN_BEARING_ACCURACY,
-                LOCATIONS_COLUMN_SPEED, LOCATIONS_COLUMN_SPEED_ACCURACY, LOCATIONS_COLUMN_VERTICAL_ACCURACY);
-
+                BuddyLocationTableType.TableName,
+                BuddyLocationTableType.Uuid,
+                BuddyLocationTableType.TimeStamp,
+                BuddyLocationTableType.Latitude,
+                BuddyLocationTableType.Longitude,
+                BuddyLocationTableType.Accuracy,
+                BuddyLocationTableType.Altitude,
+                BuddyLocationTableType.Bearing,
+                BuddyLocationTableType.BearingAccuracy,
+                BuddyLocationTableType.Speed,
+                BuddyLocationTableType.SpeedAccuracy,
+                BuddyLocationTableType.VerticalAccuracy);
         db.execSQL(query);
     }
 
     private void CreateCellularTable(SQLiteDatabase db) {
         String query = String.format("create table %s ( %s text primary key, %s integer(4) default " +
                         "(cast(strftime('%%s', 'now') as int)) , %s text )",
-                CELLULAR_TABLE_NAME, CELLULAR_COLUMN_UUID, CELLULAR_COLUMN_TIMESTAMP,
-                CELLULAR_COLUMN_BODY);
-
+                BuddyCellularTableType.TableName,
+                BuddyCellularTableType.Uuid,
+                BuddyCellularTableType.Timestamp,
+                BuddyCellularTableType.Body);
         db.execSQL(query);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        String query = String.format("drop table if exists %s", LOCATIONS_TABLE_NAME);
-        db.execSQL(query);
+        try {
+            String query = String.format("drop table if exists %s", BuddyLocationTableType.TableName);
+            db.execSQL(query);
 
-        query = String.format("drop table if exists %s", CELLULAR_TABLE_NAME);
-        db.execSQL(query);
+            query = String.format("drop table if exists %s", BuddyCellularTableType.TableName);
+            db.execSQL(query);
 
-        onCreate(db);
+            onCreate(db);
+        }
+        catch (Exception e) {
+            PLog.e(TAG, e.getMessage());
+        }
     }
 
     boolean openDatabase() {
@@ -95,30 +115,22 @@ class BuddyDBHelper extends SQLiteOpenHelper {
         return isSuccessful;
     }
 
-    long insertLocation (String uuid, Double latitude, Double longitude,
-                         float accuracy, double altitude, float bearing,
-                         float bearingAccuracy, float speed,
-                         float speedAccuracyMetersPerSecond,
-                         float verticalAccuracyMeters) {
+    public void logError(String tag, String message) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(BuddyErrorTableType.Uuid, UUID.randomUUID().toString());
+        String errorMessage = String.format("%s - %s", tag, message );
+        contentValues.put(BuddyErrorTableType.Message, errorMessage);
 
+        save(BuddyTableType.Error,contentValues);
+    }
+
+    public long save(BuddyTableType tableType, ContentValues contentValues) {
         long result = 0;
 
         if (openDatabase()) {
             try {
-                ContentValues contentValues = new ContentValues();
-                contentValues.put(LOCATIONS_COLUMN_UUID, uuid);
-                contentValues.put(LOCATIONS_COLUMN_LATITUDE, latitude);
-                contentValues.put(LOCATIONS_COLUMN_LONGITUDE, longitude);
-                contentValues.put(LOCATIONS_COLUMN_ACCURACY, accuracy);
-                contentValues.put(LOCATIONS_COLUMN_ALTITUDE, altitude);
-                contentValues.put(LOCATIONS_COLUMN_BEARING, bearing);
-                contentValues.put(LOCATIONS_COLUMN_SPEED, speed);
-                contentValues.put(LOCATIONS_COLUMN_BEARING_ACCURACY, bearingAccuracy);
-                contentValues.put(LOCATIONS_COLUMN_SPEED_ACCURACY, speedAccuracyMetersPerSecond);
-                contentValues.put(LOCATIONS_COLUMN_VERTICAL_ACCURACY, verticalAccuracyMeters);
-
-                result = db.insert(LOCATIONS_TABLE_NAME, null, contentValues);
-
+                String tableName = BuddyTableInformation.getTableName(tableType);
+                result = db.insert(tableName, null, contentValues);
             }
             catch (Exception e) {
                 PLog.i(TAG, e.getMessage());
@@ -128,24 +140,16 @@ class BuddyDBHelper extends SQLiteOpenHelper {
         return result;
     }
 
-    long insertCellInformation (String uuid, String body) {
-        long result = 0;
-
-        if (openDatabase()) {
-            try {
-                ContentValues contentValues = new ContentValues();
-
-                contentValues.put(CELLULAR_COLUMN_UUID, uuid);
-                contentValues.put(CELLULAR_COLUMN_BODY, body);
-                result = db.insert(CELLULAR_TABLE_NAME, null, contentValues);
-            }
-            catch (Exception e) {
-                PLog.i(TAG, e.getMessage());
-            }
-        }
-
-        return result;
-    }
+//    public void closeDB() {
+//        if (db == null) {
+//            try {
+//                db.close();
+//            }
+//            catch (Exception e) {
+//                PLog.e(TAG, e.getMessage());
+//            }
+//        }
+//    }
 
     public void cleanUp() {
         BuddyPreferences preferences = new BuddyPreferences();
@@ -153,15 +157,21 @@ class BuddyDBHelper extends SQLiteOpenHelper {
 
         if (openDatabase()) {
             try {
-                if (cellularRowCount() > configuration.getCommonMaxCellularRecords()) {
-                    String query = String.format(Locale.US, "delete from %s where %s in ( select %s from %s limit %d )", CELLULAR_TABLE_NAME,
-                            CELLULAR_COLUMN_UUID, CELLULAR_COLUMN_UUID, CELLULAR_TABLE_NAME, configuration.getCommonMaxRecordsToDelete());
+                if (rowCount(BuddyTableType.Cellular) > configuration.getCommonMaxCellularRecords()) {
+                    String query = String.format(Locale.US, "delete from %s where %s in ( select %s from %s limit %d )", BuddyCellularTableType.TableName,
+                            BuddyCellularTableType.Uuid, BuddyCellularTableType.Uuid, BuddyCellularTableType.TableName, configuration.getCommonMaxRecordsToDelete());
                     db.execSQL(query);
                 }
 
-                if (locationsRowCount() > configuration.getCommonMaxLocationRecords()) {
-                    String query = String.format(Locale.US, "delete from %s where %s in ( select %s from %s limit %d )", LOCATIONS_TABLE_NAME,
-                            LOCATIONS_COLUMN_UUID, LOCATIONS_COLUMN_UUID, LOCATIONS_TABLE_NAME, configuration.getCommonMaxRecordsToDelete());
+                if (rowCount(BuddyTableType.Location) > configuration.getCommonMaxLocationRecords()) {
+                    String query = String.format(Locale.US, "delete from %s where %s in ( select %s from %s limit %d )", BuddyLocationTableType.TableName,
+                            BuddyLocationTableType.Uuid, BuddyLocationTableType.Uuid, BuddyLocationTableType.TableName, configuration.getCommonMaxRecordsToDelete());
+                    db.execSQL(query);
+                }
+
+                if (rowCount(BuddyTableType.Error) > configuration.getCommonMaxErrorRecords()) {
+                    String query = String.format(Locale.US, "delete from %s where %s in ( select %s from %s limit %d )", BuddyErrorTableType.TableName,
+                            BuddyErrorTableType.Uuid, BuddyErrorTableType.Uuid, BuddyErrorTableType.TableName, configuration.getCommonMaxRecordsToDelete());
                     db.execSQL(query);
                 }
             }
@@ -171,109 +181,117 @@ class BuddyDBHelper extends SQLiteOpenHelper {
         }
     }
 
-    ArrayList<BuddyLocation> getLocationsBatch(long locationsBatchSize) {
-        ArrayList<BuddyLocation> locations = new ArrayList<>();
-
+    public JSONObject get(BuddyTableType tableType, long batchSize) {
+        JSONObject result = null;
+        String limit = batchSize == 0 ? null : String.valueOf(batchSize);
         if (openDatabase()) {
+            Cursor cursor = null;
+            JSONArray items = new JSONArray();
+            List<String> ids = new ArrayList<String>();
+
             try {
-                String query = String.format(Locale.US, "select * from %s limit %d", LOCATIONS_TABLE_NAME, locationsBatchSize);
-                Cursor res =  db.rawQuery( query, null );
-                res.moveToFirst();
+                String tableName = BuddyTableInformation.getTableName(tableType);
+                cursor = db.query(tableName, null, null, null, null, null, null, limit);
+                cursor.moveToFirst();
 
-                while (!res.isAfterLast()) {
-                    BuddyLocation location = new BuddyLocation();
-                    String uuid = res.getString(res.getColumnIndex(LOCATIONS_COLUMN_UUID));
-                    location.setUuid(uuid);
+                while (!cursor.isAfterLast()) {
 
-                    long timestamp = res.getLong(res.getColumnIndex(LOCATIONS_COLUMN_TIMESTAMP));
-                    location.setTimestamp(timestamp);
-
-                    double latitude = res.getDouble(res.getColumnIndex(LOCATIONS_COLUMN_LATITUDE));
-                    location.setLatitude(latitude);
-
-                    double longitude = res.getDouble(res.getColumnIndex(LOCATIONS_COLUMN_LONGITUDE));
-                    location.setLongitude(longitude);
-
-                    float accuracy = res.getFloat(res.getColumnIndex(LOCATIONS_COLUMN_ACCURACY));
-                    location.setAccuracy(accuracy);
-
-                    double altitude = res.getDouble(res.getColumnIndex(LOCATIONS_COLUMN_ALTITUDE));
-                    location.setAltitude(altitude);
-
-                    float bearing = res.getFloat(res.getColumnIndex(LOCATIONS_COLUMN_BEARING));
-                    location.setBearing(bearing);
-
-                    float speed  = res.getFloat(res.getColumnIndex(LOCATIONS_COLUMN_SPEED));
-                    location.setSpeed(speed);
-
-                    float bearingAccuracy = res.getFloat(res.getColumnIndex(LOCATIONS_COLUMN_BEARING_ACCURACY));
-                    location.setBearingAccuracy(bearingAccuracy);
-
-                    float speedAccuracy  = res.getFloat(res.getColumnIndex(LOCATIONS_COLUMN_SPEED_ACCURACY));
-                    location.setSpeedAccuracyMetersPerSecond(speedAccuracy);
-
-                    float verticalAccuracy = res.getFloat(res.getColumnIndex(LOCATIONS_COLUMN_VERTICAL_ACCURACY));
-                    location.setVerticalAccuracyMeters(verticalAccuracy);
-
-                    locations.add(location);
-
-                    res.moveToNext();
-                }
-
-                res.close();
-            }
-            catch (Exception e) {
-                PLog.i(TAG, e.getMessage());
-            }
-        }
-
-        return locations;
-    }
-
-    JSONArray getCellularBatch(long cellularBatchSize) {
-        JSONArray cellularInfoItems = new JSONArray();
-        if (openDatabase()) {
-            try {
-                String query = String.format(Locale.US, "select * from %s limit %d", CELLULAR_TABLE_NAME, cellularBatchSize);
-                Cursor res =  db.rawQuery( query, null );
-                res.moveToFirst();
-
-                while (!res.isAfterLast()) {
-                    JSONObject cellularInfo = new JSONObject();
-
-                    try {
-                        String uuid = res.getString(res.getColumnIndex(CELLULAR_COLUMN_UUID));
-                        cellularInfo.put("uuid", uuid);
-                        long timestamp = res.getLong(res.getColumnIndex(CELLULAR_COLUMN_TIMESTAMP));
-                        cellularInfo.put("timestamp", timestamp);
-                        String body = res.getString(res.getColumnIndex(CELLULAR_COLUMN_BODY));
-                        JSONObject cellInfo = new JSONObject(body);
-                        cellularInfo.put("cellInfo", cellInfo);
-                    } catch (JSONException e) {
-                        PLog.e(TAG, e.getMessage());
+                    JSONObject item = toJSON(tableType,cursor);
+                    if (item != null) {
+                        if (item.has("uuid")) {
+                            ids.add(item.get("uuid").toString());
+                            items.put(item);
+                        }
                     }
 
-                    cellularInfoItems.put(cellularInfo);
-
-                    res.moveToNext();
+                    cursor.moveToNext();
                 }
 
-                res.close();
+                String[] idsArray = new String[ids.size()];
+                ids.toArray(idsArray);
+
+                result = new JSONObject();
+                result.put("items",items);
+                result.put("ids", idsArray);
             }
             catch (Exception e) {
                 PLog.i(TAG, e.getMessage());
             }
+            finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
         }
 
-        return cellularInfoItems;
+        return result;
     }
 
-    int locationsRowCount(){
+    private JSONObject toJSON(BuddyTableType tableType, Cursor cursor) {
+        JSONObject result = null;
+
+        try {
+            result = new JSONObject();
+
+            if (tableType == BuddyTableType.Error) {
+                String uuid = cursor.getString(cursor.getColumnIndex(BuddyErrorTableType.Uuid));
+                result.put(BuddyErrorTableType.Uuid, uuid);
+                long timestamp = cursor.getLong(cursor.getColumnIndex(BuddyErrorTableType.Timestamp));
+                result.put(BuddyErrorTableType.Timestamp, timestamp);
+                String message = cursor.getString(cursor.getColumnIndex(BuddyErrorTableType.Message));
+                result.put(BuddyErrorTableType.Message, message);
+            }
+            else if (tableType == BuddyTableType.Cellular) {
+                String uuid = cursor.getString(cursor.getColumnIndex(BuddyCellularTableType.Uuid));
+                result.put(BuddyCellularTableType.Uuid, uuid);
+                long timestamp = cursor.getLong(cursor.getColumnIndex(BuddyCellularTableType.Timestamp));
+                result.put(BuddyCellularTableType.Timestamp, timestamp);
+                String body = cursor.getString(cursor.getColumnIndex(BuddyCellularTableType.Body));
+                JSONObject cellInfo = new JSONObject(body);
+                result.put("cellInfo", cellInfo);
+            }
+            else if (tableType == BuddyTableType.Location) {
+                String uuid = cursor.getString(cursor.getColumnIndex(BuddyLocationTableType.Uuid));
+                result.put(BuddyLocationTableType.Uuid,uuid);
+                long timestamp = cursor.getLong(cursor.getColumnIndex(BuddyLocationTableType.TimeStamp));
+                result.put(BuddyLocationTableType.TimeStamp,timestamp);
+                double latitude = cursor.getDouble(cursor.getColumnIndex(BuddyLocationTableType.Latitude));
+                result.put(BuddyLocationTableType.Latitude,latitude);
+                double longitude = cursor.getDouble(cursor.getColumnIndex(BuddyLocationTableType.Longitude));
+                result.put(BuddyLocationTableType.Longitude,longitude);
+                float accuracy = cursor.getFloat(cursor.getColumnIndex(BuddyLocationTableType.Accuracy));
+                result.put(BuddyLocationTableType.Accuracy,accuracy);
+                double altitude = cursor.getDouble(cursor.getColumnIndex(BuddyLocationTableType.Altitude));
+                result.put(BuddyLocationTableType.Altitude,altitude);
+                float bearing = cursor.getFloat(cursor.getColumnIndex(BuddyLocationTableType.Bearing));
+                result.put(BuddyLocationTableType.Bearing,bearing);
+                float speed  = cursor.getFloat(cursor.getColumnIndex(BuddyLocationTableType.Speed));
+                result.put(BuddyLocationTableType.Speed,speed);
+//                float bearingAccuracy = cursor.getFloat(cursor.getColumnIndex(BuddyLocationTableType.BearingAccuracy));
+//                result.put(BuddyLocationTableType.BearingAccuracy,bearingAccuracy);
+//                float speedAccuracy  = cursor.getFloat(cursor.getColumnIndex(BuddyLocationTableType.SpeedAccuracy));
+//                result.put(BuddyLocationTableType.SpeedAccuracy.toLowerCase(),speedAccuracy);
+//                float verticalAccuracy = cursor.getFloat(cursor.getColumnIndex(BuddyLocationTableType.VerticalAccuracy));
+//                result.put(BuddyLocationTableType.VerticalAccuracy.toLowerCase(),verticalAccuracy);
+            }
+
+        } catch (JSONException e) {
+            PLog.e(TAG, e.getMessage());
+        }
+
+        return result;
+    }
+
+    public int rowCount(BuddyTableType tableType){
         int numRows = 0;
 
         if (openDatabase()) {
             try {
-                numRows = (int) DatabaseUtils.queryNumEntries(db, LOCATIONS_TABLE_NAME);            }
+                String tableName = BuddyTableInformation.getTableName(tableType);
+                if (tableName != null) {
+                    numRows = (int) DatabaseUtils.queryNumEntries(db, tableName);
+                }
+            }
             catch (Exception e) {
                 PLog.i(TAG, e.getMessage());
             }
@@ -282,30 +300,18 @@ class BuddyDBHelper extends SQLiteOpenHelper {
         return numRows;
     }
 
-    int cellularRowCount(){
+    public long delete(BuddyTableType tableType, String[] ids) {
         int numRows = 0;
 
         if (openDatabase()) {
             try {
-                numRows = (int) DatabaseUtils.queryNumEntries(db, CELLULAR_TABLE_NAME);           }
-            catch (Exception e) {
-                PLog.i(TAG, e.getMessage());
-            }
-        }
+                String tableName = BuddyTableInformation.getTableName(tableType);
+                if (tableName != null) {
+                    String args = "'" + TextUtils.join("', '", ids) + "'";
 
-        return numRows;
-    }
-
-    long deleteLocations(String[] locationIds) {
-        int numRows = 0;
-
-        if (openDatabase()) {
-            try {
-                String args = "'" + TextUtils.join("', '", locationIds) + "'";
-
-                numRows = db.delete(LOCATIONS_TABLE_NAME,
-                        LOCATIONS_COLUMN_UUID + " in ( " + args + ")",
-                        null);
+                    String where = "uuid in ( " + args + ")";
+                    numRows = db.delete(tableName, where, null);
+                }
             }
             catch (Exception e) {
                 PLog.i(TAG, e.getMessage());
@@ -315,22 +321,4 @@ class BuddyDBHelper extends SQLiteOpenHelper {
         return numRows;
     }
 
-    public long deleteCellular(ArrayList<String> uploadableCellularIds) {
-        int numRows = 0;
-
-        if (openDatabase()) {
-            try {
-                String args = "'" + TextUtils.join("', '", uploadableCellularIds) + "'";
-
-                numRows = db.delete(CELLULAR_TABLE_NAME,
-                        CELLULAR_COLUMN_UUID + " in ( " + args + ")",
-                        null);
-            }
-            catch (Exception e) {
-                PLog.i(TAG, e.getMessage());
-            }
-        }
-
-        return numRows;
-    }
 }

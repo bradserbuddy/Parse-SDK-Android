@@ -25,6 +25,7 @@ public class BuddyPreferences {
     private final String PREF_CONFIG_UPLOAD_LOCATION = "upload-location";
     private final String PREF_CONFIG_CELLULAR_MAX_RECORDS = "max-cellular-records";
     private final String PREF_CONFIG_LOCATION_MAX_RECORDS = "max-location-records";
+    private final String PREF_CONFIG_ERROR_MAX_RECORDS = "max-error-records";
     private final String PREF_CONFIG_MAX_RECORDS_TO_DELETE = "max-records-to-delete";
     public static final String TAG = "com.parse.BuddyPreferences";
 
@@ -72,13 +73,16 @@ public class BuddyPreferences {
         configuration.setUploadLocation(shouldUploadLocation);
 
         long locationsMaxRecords = sharedPreferences.getLong(PREF_CONFIG_LOCATION_MAX_RECORDS, 0);
-        configuration.setCommonMaxLocationRecords(locationsMaxRecords == 0 ? 10000 : locationsMaxRecords);
+        configuration.setCommonMaxLocationRecords(locationsMaxRecords == 0 ? 100000 : locationsMaxRecords);
 
         long cellularMaxRecords = sharedPreferences.getLong(PREF_CONFIG_CELLULAR_MAX_RECORDS, 0);
-        configuration.setCommonMaxCellularRecords(cellularMaxRecords == 0 ? 10000 : cellularMaxRecords);
+        configuration.setCommonMaxCellularRecords(cellularMaxRecords == 0 ? 100000 : cellularMaxRecords);
+
+        long errorMaxRecords = sharedPreferences.getLong(PREF_CONFIG_ERROR_MAX_RECORDS, 0);
+        configuration.setCommonMaxErrorRecords(errorMaxRecords == 0 ? 100000 : errorMaxRecords);
 
         long maxRecordsToDelete = sharedPreferences.getLong(PREF_CONFIG_MAX_RECORDS_TO_DELETE, 0);
-        configuration.setCommonMaxRecordsToDelete(maxRecordsToDelete == 0 ? 100 : maxRecordsToDelete);
+        configuration.setCommonMaxRecordsToDelete(maxRecordsToDelete == 0 ? 1000 : maxRecordsToDelete);
 
         return configuration;
     }
@@ -111,6 +115,7 @@ public class BuddyPreferences {
                 long cellularLogTimeout = commonConfigItems.getLong(PREF_CONFIG_CELLULAR_LOG_TIMEOUT_MS);
                 long locationsMaxRecords = commonConfigItems.getLong(PREF_CONFIG_LOCATION_MAX_RECORDS);
                 long cellularMaxRecords = commonConfigItems.getLong(PREF_CONFIG_CELLULAR_MAX_RECORDS);
+                long errorMaxRecords = commonConfigItems.getLong(PREF_CONFIG_ERROR_MAX_RECORDS);
                 long maxRecordsToDelete = commonConfigItems.getLong(PREF_CONFIG_MAX_RECORDS_TO_DELETE);
 
                 JSONObject deviceConfig = null;
@@ -155,6 +160,7 @@ public class BuddyPreferences {
                     editor.putLong(PREF_CONFIG_CELLULAR_LOG_TIMEOUT_MS, cellularLogTimeout);
                     editor.putLong(PREF_CONFIG_LOCATION_MAX_RECORDS, locationsMaxRecords);
                     editor.putLong(PREF_CONFIG_CELLULAR_MAX_RECORDS, cellularMaxRecords);
+                    editor.putLong(PREF_CONFIG_ERROR_MAX_RECORDS, errorMaxRecords);
                     editor.putLong(PREF_CONFIG_LOCATION_POWER_ACCURACY, locationPowerAccuracy);
                     editor.putLong(PREF_CONFIG_LOCATION_UPDATE_INTERVAL_MS, locationUpdateInterval);
                     editor.putLong(PREF_CONFIG_LOCATION_FASTEST_UPDATE_INTERVAL_MS, locationFastestUpdateInterval);
@@ -171,6 +177,7 @@ public class BuddyPreferences {
                     savedConfig.setCommonCellularLogTimeout(cellularLogTimeout);
                     savedConfig.setCommonMaxLocationRecords(locationsMaxRecords);
                     savedConfig.setCommonMaxCellularRecords(cellularMaxRecords);
+                    savedConfig.setCommonMaxErrorRecords(errorMaxRecords);
                     savedConfig.setCommonMaxRecordsToDelete(maxRecordsToDelete);
                     savedConfig.setAndroidLocationPowerAccuracy(locationPowerAccuracy);
                     savedConfig.setAndroidLocationUpdateInterval(locationUpdateInterval);
@@ -182,7 +189,7 @@ public class BuddyPreferences {
                 }
             }
         } catch (JSONException e) {
-            PLog.e(TAG, e.getMessage());
+            BuddyDBHelper.getInstance().logError(TAG, e.getMessage());
         }
 
         return savedConfig;

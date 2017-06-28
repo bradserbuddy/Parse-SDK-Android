@@ -1,6 +1,7 @@
 package com.parse;
 
 import android.app.IntentService;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.location.Location;
 import android.support.annotation.Nullable;
@@ -23,7 +24,6 @@ public class BuddyIntentService extends IntentService {
         Location location = getLocation(intent);
 
         if (location != null) {
-            String uuid = UUID.randomUUID().toString();
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
 
@@ -35,12 +35,20 @@ public class BuddyIntentService extends IntentService {
             float speedAccuracyMetersPerSecond = 0.0f; // location.getSpeedAccuracyMetersPerSecond; => Android O
             float verticalAccuracyMeters = 0.0f; //location.getVerticalAccuracyMeters; => Android O
 
-            BuddyDBHelper dbHelper = new BuddyDBHelper(Parse.getApplicationContext());
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(BuddyLocationTableType.Uuid, UUID.randomUUID().toString());
+            contentValues.put(BuddyLocationTableType.Latitude,latitude);
+            contentValues.put(BuddyLocationTableType.Longitude,longitude);
+            contentValues.put(BuddyLocationTableType.Accuracy,accuracy);
+            contentValues.put(BuddyLocationTableType.Altitude,altitude);
+            contentValues.put(BuddyLocationTableType.Bearing,bearing);
+            contentValues.put(BuddyLocationTableType.BearingAccuracy,bearingAccuracy);
+            contentValues.put(BuddyLocationTableType.Speed,speed);
+            contentValues.put(BuddyLocationTableType.SpeedAccuracy,speedAccuracyMetersPerSecond);
+            contentValues.put(BuddyLocationTableType.VerticalAccuracy,verticalAccuracyMeters);
 
-            dbHelper.insertLocation(uuid, latitude, longitude, accuracy, altitude, bearing,
-                    bearingAccuracy, speed, speedAccuracyMetersPerSecond, verticalAccuracyMeters);
-
-            PLog.i(BuddyLocationTracker.TAG, "saved location " + uuid + " , " + latitude + " , " + longitude);
+            BuddyDBHelper.getInstance().save(BuddyTableType.Location,contentValues);
+            PLog.i(BuddyLocationTracker.TAG, "saved location " + latitude + " , " + longitude);
         } else {
             if (intent != null && intent.getAction() != null &&
                     intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
