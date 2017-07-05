@@ -12,7 +12,7 @@ class BuddyRESTCommand extends ParseRESTCommand {
     /* package for test */
     private static final String META_PATH = "meta/%s";
 
-    /* package */ static BuddyRESTCommand trackLocationEventCommand (
+    /* package */ static BuddyRESTCommand trackMetaCommand(
             String eventName, JSONObject parametersObject, String sessionToken) {
 
         String httpPath = String.format(META_PATH, Uri.encode(eventName));

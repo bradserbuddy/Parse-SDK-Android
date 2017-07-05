@@ -19,7 +19,7 @@ public class BuddyIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        PLog.i(BuddyLocationTracker.TAG, "BuddyIntentService: " + (intent == null || intent.getAction() == null ? "" : intent.getAction()));
+        PLog.i(BuddyAltDataTracker.TAG, "BuddyIntentService: " + (intent == null || intent.getAction() == null ? "" : intent.getAction()));
 
         Location location = getLocation(intent);
 
@@ -36,24 +36,24 @@ public class BuddyIntentService extends IntentService {
             float verticalAccuracyMeters = 0.0f; //location.getVerticalAccuracyMeters; => Android O
 
             ContentValues contentValues = new ContentValues();
-            contentValues.put(BuddyLocationTableType.Uuid, UUID.randomUUID().toString());
-            contentValues.put(BuddyLocationTableType.Latitude,latitude);
-            contentValues.put(BuddyLocationTableType.Longitude,longitude);
-            contentValues.put(BuddyLocationTableType.Accuracy,accuracy);
-            contentValues.put(BuddyLocationTableType.Altitude,altitude);
-            contentValues.put(BuddyLocationTableType.Bearing,bearing);
-            contentValues.put(BuddyLocationTableType.BearingAccuracy,bearingAccuracy);
-            contentValues.put(BuddyLocationTableType.Speed,speed);
-            contentValues.put(BuddyLocationTableType.SpeedAccuracy,speedAccuracyMetersPerSecond);
-            contentValues.put(BuddyLocationTableType.VerticalAccuracy,verticalAccuracyMeters);
+            contentValues.put(BuddySqliteLocationTableKeys.Uuid, UUID.randomUUID().toString());
+            contentValues.put(BuddySqliteLocationTableKeys.Latitude,latitude);
+            contentValues.put(BuddySqliteLocationTableKeys.Longitude,longitude);
+            contentValues.put(BuddySqliteLocationTableKeys.Accuracy,accuracy);
+            contentValues.put(BuddySqliteLocationTableKeys.Altitude,altitude);
+            contentValues.put(BuddySqliteLocationTableKeys.Bearing,bearing);
+            contentValues.put(BuddySqliteLocationTableKeys.BearingAccuracy,bearingAccuracy);
+            contentValues.put(BuddySqliteLocationTableKeys.Speed,speed);
+            contentValues.put(BuddySqliteLocationTableKeys.SpeedAccuracy,speedAccuracyMetersPerSecond);
+            contentValues.put(BuddySqliteLocationTableKeys.VerticalAccuracy,verticalAccuracyMeters);
 
-            BuddyDBHelper.getInstance().save(BuddyTableType.Location,contentValues);
-            PLog.i(BuddyLocationTracker.TAG, "saved location " + latitude + " , " + longitude);
+            BuddySqliteHelper.getInstance().save(BuddySqliteTableType.Location,contentValues);
+            PLog.i(BuddyAltDataTracker.TAG, "saved location " + latitude + " , " + longitude);
         } else {
             if (intent != null && intent.getAction() != null &&
                     intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
 
-                BuddyLocationTracker.getInstance().setupServices();
+                BuddyAltDataTracker.getInstance().setupServices();
             }
         }
 

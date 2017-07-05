@@ -13,7 +13,7 @@ public class BuddyWakefulBroadcastReceiver extends WakefulBroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        PLog.i(BuddyLocationTracker.TAG, "BuddyWakefulBroadcastReceiver");
+        PLog.i(BuddyAltDataTracker.TAG, "BuddyWakefulBroadcastReceiver");
 
         intent.setClass(context, BuddyIntentService.class);
 
