@@ -1,12 +1,9 @@
 package com.parse;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.BatteryManager;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 class BuddyUploadCriteria {
@@ -16,23 +13,17 @@ class BuddyUploadCriteria {
     private static boolean isUploading = false;
     private static int uploadJobsCount = 0;
     private final int milliSecondsPerDay = 24 * 60 * 60 * 1000;
-    private BuddyPreferences preferences = new BuddyPreferences();
-    private BuddyConfiguration configuration;
     public static final String TAG = "com.parse.BuddyUploadCriteria";
 
-    BuddyUploadCriteria() {
-        configuration = preferences.getConfig();
-        long lastUploaded = configuration.getLastUploadedEpoch();
-
-        if (lastUploaded == 0) {
-            // first time, so save the current time.
-            configuration = preferences.updateLastUploadedEpoch(System.currentTimeMillis());
-        }
+    BuddyUploadCriteria ()
+    {
+        isUploading = false;
+        uploadJobsCount = 0;
     }
 
-    int getBatteryPercentage() {
+    public int getBatteryPercentage(Context context) {
         IntentFilter batteryIntentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = Parse.getApplicationContext().registerReceiver(null, batteryIntentFilter);
+        Intent batteryStatus = context.registerReceiver(null, batteryIntentFilter);
 
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, 1);
@@ -40,38 +31,38 @@ class BuddyUploadCriteria {
         return Math.round((level / (float)scale) * 100);
     }
 
-    void setHasEnoughBattery(String intentAction) {
+    public void setHasEnoughBattery(String intentAction) {
         hasEnoughBattery = intentAction.equals(Intent.ACTION_BATTERY_OKAY);
     }
 
-    private boolean getHasEnoughBattery() {
-        return hasEnoughBattery || getBatteryPercentage() > 20;
+    public boolean getHasEnoughBattery(Context context) {
+        return hasEnoughBattery || getBatteryPercentage(context) > 20;
     }
 
-    BuddyConnectivityStatus getConnectivityStatus() {
+    public BuddyConnectivityStatus getConnectivityStatus() {
         return connectivityStatus;
     }
 
-    void setConnectivityStatus(BuddyConnectivityStatus status) {
+    public void setConnectivityStatus(BuddyConnectivityStatus status) {
         connectivityStatus = status;
     }
 
-    BuddyPowerConnectionStatus getPowerStatus() {
+    public BuddyPowerConnectionStatus getPowerStatus() {
         return powerStatus;
     }
 
-    void setPowerStatus(BuddyPowerConnectionStatus status) {
+    public void setPowerStatus(BuddyPowerConnectionStatus status) {
         powerStatus = status;
     }
 
-    public boolean canUpload() {
+    public boolean canUpload(Context context, BuddyConfiguration configuration) {
         boolean result = false;
 
         if (!isUploading) {
             if (System.currentTimeMillis() > configuration.getLastUploadedEpoch() + milliSecondsPerDay) {
                 if (connectivityStatus == BuddyConnectivityStatus.WifiConnected ||
                         connectivityStatus == BuddyConnectivityStatus.CellularConnected) {
-                    if (powerStatus == BuddyPowerConnectionStatus.Connected || getHasEnoughBattery()) {
+                    if (powerStatus == BuddyPowerConnectionStatus.Connected || getHasEnoughBattery(context)) {
                         result = true;
                     }
                 }
@@ -89,9 +80,9 @@ class BuddyUploadCriteria {
         return result;
     }
 
-    public void updateInitialPowerStatus() {
+    public void updateInitialPowerStatus(Context context) {
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = Parse.getApplicationContext().registerReceiver(null, ifilter);
+        Intent batteryStatus = context.registerReceiver(null, ifilter);
         int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
         if (isCharging) {
@@ -102,20 +93,28 @@ class BuddyUploadCriteria {
         }
     }
 
-    public synchronized void startUpload() {
+    public synchronized BuddyUploadStatus startUpload() {
         uploadJobsCount++;
         if (!isUploading) {
             isUploading = true;
         }
         PLog.i(TAG, "startUpload - isUploading = " + String.valueOf(isUploading) + ", jobs = " + String.valueOf(uploadJobsCount));
+
+        BuddyUploadStatus status = new BuddyUploadStatus();
+        status.setJobsCount(uploadJobsCount);
+        status.setUploading(isUploading);
+
+        return status;
     }
 
-    public synchronized void endUpload() {
-        configuration = preferences.updateLastUploadedEpoch(System.currentTimeMillis());
+    public synchronized BuddyUploadStatus endUpload(Context context) {
+        BuddyPreferenceService.updateLastUploadedEpoch(context, System.currentTimeMillis());
+
         if (isUploading) {
             uploadJobsCount--;
-            if (uploadJobsCount == 0) {
+            if (uploadJobsCount <= 0) {
                 isUploading = false;
+                uploadJobsCount = 0;
             }
         }
         else {
@@ -123,5 +122,11 @@ class BuddyUploadCriteria {
         }
 
         PLog.i(TAG, "endUpload - isUploading = " + String.valueOf(isUploading) + ", jobs = " + String.valueOf(uploadJobsCount));
+
+        BuddyUploadStatus status = new BuddyUploadStatus();
+        status.setJobsCount(uploadJobsCount);
+        status.setUploading(isUploading);
+
+        return status;
     }
 }

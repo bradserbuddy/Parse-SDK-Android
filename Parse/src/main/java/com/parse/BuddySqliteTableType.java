@@ -1,6 +1,6 @@
 package com.parse;
 
-public enum BuddyTableType {
+public enum BuddySqliteTableType {
     Error,
     Cellular,
     Location,

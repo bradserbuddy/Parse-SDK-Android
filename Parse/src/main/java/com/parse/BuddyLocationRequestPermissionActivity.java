@@ -21,7 +21,7 @@ public class BuddyLocationRequestPermissionActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        PLog.i(BuddyLocationTracker.TAG, "BuddyLocationRequestPermissionActivity start");
+        PLog.i(BuddyAltDataTracker.TAG, "BuddyLocationRequestPermissionActivity start");
 
         setContentView(R.layout.buddy_location_request_permission_layout);
 
@@ -53,7 +53,7 @@ public class BuddyLocationRequestPermissionActivity extends AppCompatActivity
     }
 
     private void startService() {
-        BuddyLocationTracker.getInstance().setupServices();
+        BuddyAltDataTracker.getInstance().setupServices();
 
         finish();
     }

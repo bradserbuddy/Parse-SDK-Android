@@ -1,6 +1,6 @@
 package com.parse;
 
-public class BuddyErrorTableType {
+public class BuddySqliteErrorTableKeys {
     public static final String TableName = "error";
     public static final String Uuid = "uuid";
     public static final String Timestamp = "timestamp";

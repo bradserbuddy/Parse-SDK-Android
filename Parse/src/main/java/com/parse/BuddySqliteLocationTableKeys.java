@@ -1,9 +1,9 @@
 package com.parse;
 
-public class BuddyLocationTableType {
+public class BuddySqliteLocationTableKeys {
     public static final String TableName = "locations";
     public static final String Uuid = "uuid";
-    public static final String TimeStamp = "timestamp";
+    public static final String Timestamp = "timestamp";
     public static final String Latitude = "latitude";
     public static final String Longitude = "longitude";
     public static final String Accuracy = "accuracy";
