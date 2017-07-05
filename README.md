@@ -11,15 +11,15 @@ A library that gives you access to the powerful Parse cloud platform from your A
 For more information about Parse and its features, see [the website][parseplatform.org] and [getting started][guide].
 
 ## Download
-Download [the latest JAR][latest] or define in Gradle:
+Add the dependency in Gradle:
 
 ```groovy
 dependencies {
-  compile 'com.parse:parse-android:1.15.4'
+  compile 'com.parse:parse-android:1.15.7'
 }
 ```
 
-Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
+Snapshots of the development version are available in [jFrog's `snapshots` repository][snap].
 
 ## Usage
 Everything can done through the supplied gradle wrapper:
@@ -68,7 +68,7 @@ As of April 5, 2017, Parse, LLC has transferred this code to the parse-community
  [guide]: http://docs.parseplatform.org/android/guide/
 
  [latest]: https://search.maven.org/remote_content?g=com.parse&a=parse-android&v=LATEST
- [snap]: https://oss.sonatype.org/content/repositories/snapshots/
+ [snap]: https://oss.jfrog.org/artifactory/oss-snapshot-local/com/parse/parse-android/
 
  [build-status-svg]: https://travis-ci.org/parse-community/Parse-SDK-Android.svg?branch=master
  [build-status-link]: https://travis-ci.org/parse-community/Parse-SDK-Android
