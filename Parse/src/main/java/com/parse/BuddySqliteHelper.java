@@ -23,7 +23,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
     public static final String TAG = "com.parse.BuddySqliteHelper";
     private static final String DATABASE_NAME = "Buddy.db";
     private static SQLiteDatabase db;
-    private static int dbVersion = 1; // bump up on every release
+    private static final int dbVersion = 1; // bump up on every release
 
     public static synchronized BuddySqliteHelper getInstance() {
         if (Instance == null) {
@@ -37,6 +37,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        PLog.i(TAG, "onCreate");
         try {
             CreateLocationsTable(db);
             CreateCellularTable(db);
@@ -87,12 +88,14 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
+        PLog.i(TAG, "onUpgrade");
+
         try {
             dropTable(database, BuddySqliteLocationTableKeys.TableName);
             dropTable(database, BuddySqliteCellularTableKeys.TableName);
             dropTable(database, BuddySqliteErrorTableKeys.TableName);
 
-            onCreate(db);
+            onCreate(database);
         }
         catch (Exception e) {
             PLog.e(TAG, e.getMessage());
@@ -103,10 +106,15 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
         try {
             String query = String.format("drop table if exists %s", tableName);
             database.execSQL(query);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             PLog.e(TAG, e.getMessage());
         }
+    }
+
+    @Override
+    public void onDowngrade(SQLiteDatabase database, int oldVersion, int newVersion) {
+        PLog.i(TAG, "onDowngrade");
+        onUpgrade(database, oldVersion, newVersion);
     }
 
     boolean openDatabase() {
@@ -123,7 +131,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
         return isSuccessful;
     }
 
-    public void logError(String tag, String message) {
+    void logError(String tag, String message) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(BuddySqliteErrorTableKeys.Uuid, UUID.randomUUID().toString());
         String errorMessage = String.format("%s - %s", tag, message );

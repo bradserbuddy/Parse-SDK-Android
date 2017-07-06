@@ -46,6 +46,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -120,8 +121,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         JSONObject applicationsObject = new JSONObject();
         try {
             applicationsObject.put("apps", new JSONArray(appNames));
-            long deviceIdLong = getDeviceId();
-            applicationsObject.put("deviceId", deviceIdLong);
+            BigInteger deviceId = getDeviceId();
+            applicationsObject.put("deviceId", deviceId);
             applicationsObject.put("configVersion", configuration.get().getVersion());
         } catch (JSONException e) {
             BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
@@ -357,7 +358,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         JSONObject deviceInfoObject = new JSONObject();
 
         try {
-            long deviceIdLong = getDeviceId();
+            BigInteger deviceId = getDeviceId();
             deviceInfoObject.put("brand", Build.BRAND);
             deviceInfoObject.put("model", Build.MODEL);
             deviceInfoObject.put("board", Build.BOARD);
@@ -371,7 +372,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             deviceInfoObject.put("product", Build.PRODUCT);
             deviceInfoObject.put("sdkVersionRelease", Build.VERSION.RELEASE);
             deviceInfoObject.put("sdkVersionNumber", Build.VERSION.SDK_INT);
-            deviceInfoObject.put("deviceId", deviceIdLong);
+            deviceInfoObject.put("deviceId", deviceId);
             deviceInfoObject.put("configVersion", configuration.get().getVersion());
         } catch (JSONException e) {
             BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
@@ -405,8 +406,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     JSONObject deviceStatus = getDeviceStatus();
                     JSONObject parametersObject = new JSONObject();
                     parametersObject.put("locations", items);
-                    long deviceIdLong = getDeviceId();
-                    parametersObject.put("deviceId", deviceIdLong);
+                    BigInteger deviceId = getDeviceId();
+                    parametersObject.put("deviceId", deviceId);
                     parametersObject.put("device_status", deviceStatus);
                     parametersObject.put("configVersion", configuration.get().getVersion());
 
@@ -583,8 +584,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     final String[] ids = (String[]) cellularInfoItems.get("ids");
 
                     JSONObject parametersObject = new JSONObject();
-                    long deviceIdLong = getDeviceId();
-                    parametersObject.put("deviceId", deviceIdLong);
+                    BigInteger deviceId = getDeviceId();
+                    parametersObject.put("deviceId", deviceId);
                     parametersObject.put("cellular", items);
                     parametersObject.put("configVersion", configuration.get().getVersion());
 
@@ -629,9 +630,10 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         configuration.set(BuddyPreferenceService.getConfig(context));
     }
 
-    private long getDeviceId() {
+    private BigInteger getDeviceId() {
         String deviceIdString = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-        return Long.parseLong(deviceIdString, 16);
+
+        return new BigInteger(deviceIdString, 16);
     }
 
     private void setupEvents() {
@@ -759,8 +761,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     final String[] ids = (String[]) errors.get("ids");
                     JSONObject parametersObject = new JSONObject();
                     parametersObject.put("errors", items);
-                    long deviceIdLong = getDeviceId();
-                    parametersObject.put("deviceId", deviceIdLong);
+                    BigInteger deviceId = getDeviceId();
+                    parametersObject.put("deviceId", deviceId);
                     parametersObject.put("configVersion", configuration.get().getVersion());
 
                     BuddyMetaData.uploadMetaDataInBackground("error", parametersObject, new SaveCallback() {
