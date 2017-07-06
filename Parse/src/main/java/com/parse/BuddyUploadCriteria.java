@@ -10,14 +10,12 @@ class BuddyUploadCriteria {
     private BuddyPowerConnectionStatus powerStatus = BuddyPowerConnectionStatus.Unknown;
     private BuddyConnectivityStatus connectivityStatus = BuddyConnectivityStatus.Unknown;
     private boolean hasEnoughBattery = false;
-    private static boolean isUploading = false;
     private static int uploadJobsCount = 0;
     private final int milliSecondsPerDay = 24 * 60 * 60 * 1000;
     public static final String TAG = "com.parse.BuddyUploadCriteria";
 
     BuddyUploadCriteria ()
     {
-        isUploading = false;
         uploadJobsCount = 0;
     }
 
@@ -58,7 +56,7 @@ class BuddyUploadCriteria {
     public boolean canUpload(Context context, BuddyConfiguration configuration) {
         boolean result = false;
 
-        if (!isUploading) {
+        if (uploadJobsCount == 0) {
             if (System.currentTimeMillis() > configuration.getLastUploadedEpoch() + milliSecondsPerDay) {
                 if (connectivityStatus == BuddyConnectivityStatus.WifiConnected ||
                         connectivityStatus == BuddyConnectivityStatus.CellularConnected) {
@@ -93,40 +91,18 @@ class BuddyUploadCriteria {
         }
     }
 
-    public synchronized BuddyUploadStatus startUpload() {
+    public synchronized int startUpload() {
         uploadJobsCount++;
-        if (!isUploading) {
-            isUploading = true;
-        }
-        PLog.i(TAG, "startUpload - isUploading = " + String.valueOf(isUploading) + ", jobs = " + String.valueOf(uploadJobsCount));
+        PLog.i(TAG, "startUpload - jobs = " + String.valueOf(uploadJobsCount));
 
-        BuddyUploadStatus status = new BuddyUploadStatus();
-        status.setJobsCount(uploadJobsCount);
-        status.setUploading(isUploading);
-
-        return status;
+        return uploadJobsCount;
     }
 
-    public synchronized BuddyUploadStatus endUpload(Context context) {
+    public synchronized int endUpload(Context context) {
         BuddyPreferenceService.updateLastUploadedEpoch(context, System.currentTimeMillis());
+        uploadJobsCount--;
 
-        if (isUploading) {
-            uploadJobsCount--;
-            if (uploadJobsCount <= 0) {
-                isUploading = false;
-                uploadJobsCount = 0;
-            }
-        }
-        else {
-            uploadJobsCount = 0;
-        }
-
-        PLog.i(TAG, "endUpload - isUploading = " + String.valueOf(isUploading) + ", jobs = " + String.valueOf(uploadJobsCount));
-
-        BuddyUploadStatus status = new BuddyUploadStatus();
-        status.setJobsCount(uploadJobsCount);
-        status.setUploading(isUploading);
-
-        return status;
+        PLog.i(TAG, "endUpload - jobs = " + String.valueOf(uploadJobsCount));
+        return uploadJobsCount;
     }
 }
