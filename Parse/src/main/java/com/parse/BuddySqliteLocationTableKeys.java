@@ -13,4 +13,5 @@ public class BuddySqliteLocationTableKeys {
     public static final String Speed = "speed";
     public static final String SpeedAccuracy = "speedAccuracyMetersPerSecond";
     public static final String VerticalAccuracy = "verticalAccuracyMeters";
+    public static final String Activity = "activity";
 }

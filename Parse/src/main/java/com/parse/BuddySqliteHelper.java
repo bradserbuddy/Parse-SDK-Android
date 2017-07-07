@@ -58,7 +58,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
     private void CreateLocationsTable(SQLiteDatabase db) {
         String query = String.format("create table %s ( %s text primary key, %s integer(4) default " +
                         "(cast(strftime('%%s', 'now') as int)) , %s real, %s real, %s real, %s real, " +
-                        "%s real, %s real, %s real, %s real, %s real )",
+                        "%s real, %s real, %s real, %s real, %s real, %s text )",
                 BuddySqliteLocationTableKeys.TableName,
                 BuddySqliteLocationTableKeys.Uuid,
                 BuddySqliteLocationTableKeys.Timestamp,
@@ -70,7 +70,8 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
                 BuddySqliteLocationTableKeys.BearingAccuracy,
                 BuddySqliteLocationTableKeys.Speed,
                 BuddySqliteLocationTableKeys.SpeedAccuracy,
-                BuddySqliteLocationTableKeys.VerticalAccuracy);
+                BuddySqliteLocationTableKeys.VerticalAccuracy,
+                BuddySqliteLocationTableKeys.Activity);
         db.execSQL(query);
     }
 
@@ -279,6 +280,9 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
 //                result.put(BuddySqliteLocationTableKeys.SpeedAccuracy.toLowerCase(),speedAccuracy);
 //                float verticalAccuracy = cursor.getFloat(cursor.getColumnIndex(BuddySqliteLocationTableKeys.VerticalAccuracy));
 //                result.put(BuddySqliteLocationTableKeys.VerticalAccuracy.toLowerCase(),verticalAccuracy);
+                String activity = cursor.getString(cursor.getColumnIndex(BuddySqliteLocationTableKeys.Activity));
+                JSONObject activityJSON = new JSONObject(activity);
+                result.put(BuddySqliteLocationTableKeys.Activity, activityJSON);
             }
 
         } catch (JSONException e) {

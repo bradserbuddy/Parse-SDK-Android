@@ -1,6 +1,7 @@
 package com.parse;
 
 import android.app.ActivityManager;
+import android.app.Instrumentation;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
@@ -37,6 +38,7 @@ import android.telephony.gsm.GsmCellLocation;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
@@ -786,7 +788,6 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     void setupServices() {
         PLog.i(TAG, "setupServices");
         activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-
         if (configuration.get().shouldLogCellular()) {
             startCellularInfoLogTimer();
         }
@@ -865,13 +866,17 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                             }
                         }
                     }
-                }).addApi(LocationServices.API).build();
+                })
+                .addApi(LocationServices.API)
+                .addApi(ActivityRecognition.API)
+                .build();
 
         startGoogleApiClient();
     }
 
     @Override
     public void onConnected(Bundle bundle) {
+
         onConnected();
     }
 
@@ -882,8 +887,10 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
     @Override
     public void onConnected() {
-        PLog.i(TAG, "location service onConnected");
+        PLog.i(TAG, "service onConnected");
         try {
+            ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates( googleApiClient, 3000, getPendingIntent() );
+
             // location service can throw an exception if permissions are not set
 
             if (lostApiClient == null) {
@@ -916,7 +923,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
             PLog.i(TAG, "setupServices: end GoogleApiClient.Builder");
         } catch (SecurityException securityException) {
-            PLog.w(TAG, "setupServices: Missing ACCESS_FINE_LOCATION permission in the AndroidManifest");
+            PLog.w(TAG, "setupServices: Missing ACCESS_FINE_LOCATION or com.google.android.gms.permission.ACTIVITY_RECOGNITION permission in the AndroidManifest");
             googleApiClient.disconnect();
         }
     }
