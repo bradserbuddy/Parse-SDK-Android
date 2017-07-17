@@ -86,7 +86,6 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     private static GoogleApiClient googleApiClient;
     private static LostApiClient lostApiClient;
     private static final String configUrl = "https://cdn.parse.buddy.com/sdk/config.json";
-    private static ActivityManager activityManager;
     private static boolean loadingNewConfiguration = false;
     private static Context context;
     private static final AtomicReference<BuddyConfiguration> configuration = new AtomicReference<BuddyConfiguration>();
@@ -124,7 +123,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             applicationsObject.put("apps", new JSONArray(appNames));
             long deviceIdLong = getDeviceId();
             applicationsObject.put("deviceId", deviceIdLong);
-            applicationsObject.put("buddySdkVersion", configuration.get().getVersion());
+            applicationsObject.put("configVersion", configuration.get().getVersion());
         } catch (JSONException e) {
             BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
         }
@@ -371,6 +370,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
     private static boolean isInBackground() {
         boolean isBackground = false;
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningAppProcessInfo> processList = activityManager.getRunningAppProcesses();
         if (processList == null) {
             // can't find the app, so it is background because we don't want to log cell info.
@@ -401,7 +401,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             deviceInfoObject.put("sdkVersion", android.os.Build.VERSION.RELEASE);
             deviceInfoObject.put("sdkVersionNumber", android.os.Build.VERSION.SDK_INT);
             deviceInfoObject.put("deviceId", deviceIdLong);
-            deviceInfoObject.put("buddySdkVersion", configuration.get().getVersion());
+            deviceInfoObject.put("configVersion", configuration.get().getVersion());
         } catch (JSONException e) {
             BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
         }
@@ -437,7 +437,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     long deviceIdLong = getDeviceId();
                     parametersObject.put("deviceId", deviceIdLong);
                     parametersObject.put("device_status", deviceStatus);
-                    parametersObject.put("buddySdkVersion", configuration.get().getVersion());
+                    parametersObject.put("configVersion", configuration.get().getVersion());
 
                     trackEventInBackground("location", parametersObject, new SaveCallback() {
                         @Override
@@ -615,7 +615,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     long deviceIdLong = getDeviceId();
                     parametersObject.put("deviceId", deviceIdLong);
                     parametersObject.put("cellular", items);
-                    parametersObject.put("buddySdkVersion", configuration.get().getVersion());
+                    parametersObject.put("configVersion", configuration.get().getVersion());
 
                     trackEventInBackground("cellular", parametersObject, new SaveCallback() {
                         @Override
@@ -787,7 +787,6 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
     void setupServices() {
         PLog.i(TAG, "setupServices");
-        activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         if (configuration.get().shouldLogCellular()) {
             startCellularInfoLogTimer();
         }
@@ -814,7 +813,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     parametersObject.put("errors", items);
                     long deviceIdLong = getDeviceId();
                     parametersObject.put("deviceId", deviceIdLong);
-                    parametersObject.put("buddySdkVersion", configuration.get().getVersion());
+                    parametersObject.put("configVersion", configuration.get().getVersion());
 
                     trackEventInBackground("error", parametersObject, new SaveCallback() {
                         @Override
