@@ -1,7 +1,6 @@
 package com.parse;
 
 import android.app.ActivityManager;
-import android.app.Instrumentation;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
@@ -128,7 +127,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
         }
 
-        trackEventInBackground("apps", applicationsObject, new SaveCallback() {
+        BuddyMetaData.uploadMetaDataInBackground("apps", applicationsObject, new SaveCallback() {
             @Override
             public void done(ParseException e) {
             if (e == null) {
@@ -378,7 +377,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
         }
 
-        trackEventInBackground("device", deviceInfoObject, new SaveCallback() {
+        BuddyMetaData.uploadMetaDataInBackground("device", deviceInfoObject, new SaveCallback() {
             @Override
             public void done(ParseException e) {
             if (e == null) {
@@ -411,7 +410,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     parametersObject.put("device_status", deviceStatus);
                     parametersObject.put("configVersion", configuration.get().getVersion());
 
-                    trackEventInBackground("location", parametersObject, new SaveCallback() {
+                    BuddyMetaData.uploadMetaDataInBackground("location", parametersObject, new SaveCallback() {
                         @Override
                         public void done(ParseException e) {
                         if (e == null) {
@@ -589,7 +588,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     parametersObject.put("cellular", items);
                     parametersObject.put("configVersion", configuration.get().getVersion());
 
-                    trackEventInBackground("cellular", parametersObject, new SaveCallback() {
+                    BuddyMetaData.uploadMetaDataInBackground("cellular", parametersObject, new SaveCallback() {
                         @Override
                         public void done(ParseException e) {
                             if (e == null) {
@@ -633,29 +632,6 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     private long getDeviceId() {
         String deviceIdString = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
         return Long.parseLong(deviceIdString, 16);
-    }
-
-    void trackEventInBackground(String name, JSONObject parametersObject, SaveCallback callback) {
-        ParseTaskUtils.callbackOnMainThreadAsync(trackEventInBackground(name, parametersObject), callback);
-    }
-
-    Task<Void> trackEventInBackground(final String name,
-                                      final JSONObject parametersObject) {
-        if (name == null || name.trim().length() == 0) {
-            throw new IllegalArgumentException("A name for the custom event must be provided.");
-        }
-
-        return ParseUser.getCurrentSessionTokenAsync().onSuccessTask(new Continuation<String, Task<Void>>() {
-            @Override
-            public Task<Void> then(Task<String> task) throws Exception {
-                String sessionToken = task.getResult();
-                return getLocationsController().trackMetaInBackground(name, parametersObject, sessionToken);
-            }
-        });
-    }
-
-    /* package for test */ BuddyAltDataController getLocationsController() {
-        return ParseCorePlugins.getInstance().getLocationsController();
     }
 
     private void setupEvents() {
@@ -773,10 +749,10 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     }
 
     private void uploadErrors() {
-        PLog.i(TAG, "Uploading error logs");
         final JSONObject errors = BuddySqliteHelper.getInstance().get(BuddySqliteTableType.Error, 0);
 
         if (errors.has("items") && errors.has("ids")) {
+            PLog.i(TAG, "Uploading error logs");
             try {
                 final JSONArray items = (JSONArray) errors.get("items");
                 if (items.length() > 0) {
@@ -787,7 +763,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     parametersObject.put("deviceId", deviceIdLong);
                     parametersObject.put("configVersion", configuration.get().getVersion());
 
-                    trackEventInBackground("error", parametersObject, new SaveCallback() {
+                    BuddyMetaData.uploadMetaDataInBackground("error", parametersObject, new SaveCallback() {
                         @Override
                         public void done(ParseException e) {
                         if (e == null) {
