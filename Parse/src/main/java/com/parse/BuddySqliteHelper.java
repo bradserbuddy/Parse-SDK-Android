@@ -86,15 +86,23 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
         try {
-            String query = String.format("drop table if exists %s", BuddySqliteLocationTableKeys.TableName);
-            db.execSQL(query);
-
-            query = String.format("drop table if exists %s", BuddySqliteCellularTableKeys.TableName);
-            db.execSQL(query);
+            dropTable(database, BuddySqliteLocationTableKeys.TableName);
+            dropTable(database, BuddySqliteCellularTableKeys.TableName);
+            dropTable(database, BuddySqliteErrorTableKeys.TableName);
 
             onCreate(db);
+        }
+        catch (Exception e) {
+            PLog.e(TAG, e.getMessage());
+        }
+    }
+
+    void dropTable(SQLiteDatabase database, String tableName) {
+        try {
+            String query = String.format("drop table if exists %s", tableName);
+            database.execSQL(query);
         }
         catch (Exception e) {
             PLog.e(TAG, e.getMessage());
@@ -139,17 +147,6 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
 
         return result;
     }
-
-//    public void closeDB() {
-//        if (db == null) {
-//            try {
-//                db.close();
-//            }
-//            catch (Exception e) {
-//                PLog.e(TAG, e.getMessage());
-//            }
-//        }
-//    }
 
     public void cleanUp(BuddyConfiguration configuration) {
         if (openDatabase()) {

@@ -20,11 +20,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 
 public class BuddyIntentService extends IntentService {
-    private static AtomicReference<JSONArray> lastDetectedActivities = new AtomicReference<JSONArray>();
+    private static AtomicReference<JSONObject> lastDetectedActivity = new AtomicReference<>();
 
     public BuddyIntentService() {
         super("BuddyIntentService");
-        lastDetectedActivities = new AtomicReference<>();
+        lastDetectedActivity = new AtomicReference<>();
     }
 
     @Override
@@ -33,7 +33,7 @@ public class BuddyIntentService extends IntentService {
 
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
-            handleDetectedActivities(result.getProbableActivities());
+            handleDetectedActivity(result.getMostProbableActivity());
         }
         else {
             Location location = getLocation(intent);
@@ -63,9 +63,9 @@ public class BuddyIntentService extends IntentService {
                 contentValues.put(BuddySqliteLocationTableKeys.VerticalAccuracy,verticalAccuracyMeters);
 
                 try {
-                    String activity = "[{\"name\": \"Unknown\", \"confidence\": 0}]";
-                    if (lastDetectedActivities.get() != null) {
-                        activity = lastDetectedActivities.get().toString(0);
+                    String activity = "{\"name\": \"Unknown\", \"confidence\": 0}";
+                    if (lastDetectedActivity.get() != null) {
+                        activity = lastDetectedActivity.get().toString(0);
                     }
 
                     contentValues.put(BuddySqliteLocationTableKeys.Activity,activity);
@@ -101,66 +101,61 @@ public class BuddyIntentService extends IntentService {
         }
     }
 
-    private void handleDetectedActivities(List<DetectedActivity> probableActivities) {
-        JSONArray activities = new JSONArray();
-
-        for (DetectedActivity activity : probableActivities) {
-            JSONObject buddyActivity = new JSONObject();
-            try {
-                buddyActivity.put("confidence", activity.getConfidence());
-                String activityName = "";
-                switch (activity.getType()) {
-                    case DetectedActivity.IN_VEHICLE: {
-                        PLog.i("ActivityRecogition", "In Vehicle: " + activity.getConfidence());
-                        activityName = "In Vehicle";
-                        break;
-                    }
-                    case DetectedActivity.ON_BICYCLE: {
-                        PLog.i("ActivityRecogition", "On Bicycle: " + activity.getConfidence());
-                        activityName = "On Bicycle";
-                        break;
-                    }
-                    case DetectedActivity.ON_FOOT: {
-                        PLog.i("ActivityRecogition", "On Foot: " + activity.getConfidence());
-                        activityName = "On Foot";
-                        break;
-                    }
-                    case DetectedActivity.RUNNING: {
-                        PLog.i("ActivityRecogition", "Running: " + activity.getConfidence());
-                        activityName = "Running";
-                        break;
-                    }
-                    case DetectedActivity.STILL: {
-                        PLog.i("ActivityRecogition", "Still: " + activity.getConfidence());
-                        activityName = "Still";
-                        break;
-                    }
-                    case DetectedActivity.TILTING: {
-                        PLog.i("ActivityRecogition", "Tilting: " + activity.getConfidence());
-                        activityName = "Tilting";
-                        break;
-                    }
-                    case DetectedActivity.WALKING: {
-                        PLog.i("ActivityRecogition", "Walking: " + activity.getConfidence());
-                        activityName = "Walking";
-                        break;
-                    }
-                    case DetectedActivity.UNKNOWN: {
-                        PLog.i("ActivityRecogition", "Unknown: " + activity.getConfidence());
-                        activityName = "Unknown";
-                        break;
-                    }
+    private void handleDetectedActivity(DetectedActivity activity) {
+        JSONObject buddyActivity = new JSONObject();
+        try {
+            String activityName = "";
+            switch (activity.getType()) {
+                case DetectedActivity.IN_VEHICLE: {
+                    PLog.i("ActivityRecogition", "In Vehicle: " + activity.getConfidence());
+                    activityName = "In Vehicle";
+                    break;
                 }
-
-                if (!activityName.isEmpty()) {
-                    buddyActivity.put("name", activityName);
-                    activities.put(buddyActivity);
+                case DetectedActivity.ON_BICYCLE: {
+                    PLog.i("ActivityRecogition", "On Bicycle: " + activity.getConfidence());
+                    activityName = "On Bicycle";
+                    break;
                 }
-            } catch (JSONException e) {
-                BuddySqliteHelper.getInstance().logError(BuddyAltDataTracker.TAG, e.getMessage());
+                case DetectedActivity.ON_FOOT: {
+                    PLog.i("ActivityRecogition", "On Foot: " + activity.getConfidence());
+                    activityName = "On Foot";
+                    break;
+                }
+                case DetectedActivity.RUNNING: {
+                    PLog.i("ActivityRecogition", "Running: " + activity.getConfidence());
+                    activityName = "Running";
+                    break;
+                }
+                case DetectedActivity.STILL: {
+                    PLog.i("ActivityRecogition", "Still: " + activity.getConfidence());
+                    activityName = "Still";
+                    break;
+                }
+                case DetectedActivity.TILTING: {
+                    PLog.i("ActivityRecogition", "Tilting: " + activity.getConfidence());
+                    activityName = "Tilting";
+                    break;
+                }
+                case DetectedActivity.WALKING: {
+                    PLog.i("ActivityRecogition", "Walking: " + activity.getConfidence());
+                    activityName = "Walking";
+                    break;
+                }
+                case DetectedActivity.UNKNOWN: {
+                    PLog.i("ActivityRecogition", "Unknown: " + activity.getConfidence());
+                    activityName = "Unknown";
+                    break;
+                }
             }
-        }
 
-        lastDetectedActivities.set(activities);
+            if (!activityName.isEmpty()) {
+                buddyActivity.put("name", activityName);
+                buddyActivity.put("confidence", activity.getConfidence());
+                lastDetectedActivity.set(buddyActivity);
+            }
+        } catch (JSONException e) {
+            BuddySqliteHelper.getInstance().logError(BuddyAltDataTracker.TAG, e.getMessage());
+        }
     }
+
 }
