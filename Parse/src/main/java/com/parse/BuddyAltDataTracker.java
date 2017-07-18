@@ -359,10 +359,19 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
         try {
             long deviceIdLong = getDeviceId();
-            deviceInfoObject.put("deviceBrand", android.os.Build.BRAND);
-            deviceInfoObject.put("deviceModel", android.os.Build.MODEL);
-            deviceInfoObject.put("sdkVersion", android.os.Build.VERSION.RELEASE);
-            deviceInfoObject.put("sdkVersionNumber", android.os.Build.VERSION.SDK_INT);
+            deviceInfoObject.put("brand", Build.BRAND);
+            deviceInfoObject.put("model", Build.MODEL);
+            deviceInfoObject.put("board", Build.BOARD);
+            deviceInfoObject.put("device", Build.DEVICE);
+            deviceInfoObject.put("display", Build.DISPLAY);
+            deviceInfoObject.put("fingerprint", Build.FINGERPRINT);
+            deviceInfoObject.put("bootloader", Build.BOOTLOADER);
+            deviceInfoObject.put("hardware", Build.HARDWARE);
+            deviceInfoObject.put("host", Build.HOST);
+            deviceInfoObject.put("manufacturer", Build.MANUFACTURER);
+            deviceInfoObject.put("product", Build.PRODUCT);
+            deviceInfoObject.put("sdkVersionRelease", Build.VERSION.RELEASE);
+            deviceInfoObject.put("sdkVersionNumber", Build.VERSION.SDK_INT);
             deviceInfoObject.put("deviceId", deviceIdLong);
             deviceInfoObject.put("configVersion", configuration.get().getVersion());
         } catch (JSONException e) {
