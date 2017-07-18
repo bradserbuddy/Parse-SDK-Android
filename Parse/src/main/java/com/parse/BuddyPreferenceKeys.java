@@ -18,4 +18,5 @@ public class BuddyPreferenceKeys {
     public static final String preferenceConfigLocationMaxRecords = "max-location-records";
     public static final String preferenceConfigErrorMaxRecords = "max-error-records";
     public static final String preferenceConfigMaxRecordsToDelete = "max-records-to-delete";
+    public static final String preferenceConfigActivityMonitorInterval = "activity-monitor-interval";
 }

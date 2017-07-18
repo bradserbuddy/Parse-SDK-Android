@@ -64,6 +64,9 @@ public class BuddyPreferenceService {
         long maxRecordsToDelete = sharedPreferences.getLong(BuddyPreferenceKeys.preferenceConfigMaxRecordsToDelete, 0);
         configuration.setCommonMaxRecordsToDelete(maxRecordsToDelete == 0 ? 1000 : maxRecordsToDelete);
 
+        long activityMonitoringInterval = sharedPreferences.getLong(BuddyPreferenceKeys.preferenceConfigActivityMonitorInterval, 0);
+        configuration.setAndroidActivityMonitoringInterval(activityMonitoringInterval == 0 ? 3000 : activityMonitoringInterval);
+
         return configuration;
     }
 
@@ -91,6 +94,7 @@ public class BuddyPreferenceService {
                 long cellularMaxRecords = commonConfigItems.getLong(BuddyPreferenceKeys.preferenceConfigCellularMaxRecords);
                 long errorMaxRecords = commonConfigItems.getLong(BuddyPreferenceKeys.preferenceConfigErrorMaxRecords);
                 long maxRecordsToDelete = commonConfigItems.getLong(BuddyPreferenceKeys.preferenceConfigMaxRecordsToDelete);
+                long activityMonitoringInterval = commonConfigItems.getLong(BuddyPreferenceKeys.preferenceConfigActivityMonitorInterval);
 
                 JSONObject deviceConfig = null;
                 JSONObject defaultConfig = null;
@@ -144,6 +148,7 @@ public class BuddyPreferenceService {
                     editor.putBoolean(BuddyPreferenceKeys.preferenceConfigUploadCellular, shouldUploadCellular);
                     editor.putBoolean(BuddyPreferenceKeys.preferenceConfigUploadLocation, shouldUploadLocation);
                     editor.putLong(BuddyPreferenceKeys.preferenceConfigMaxRecordsToDelete, maxRecordsToDelete);
+                    editor.putLong(BuddyPreferenceKeys.preferenceConfigActivityMonitorInterval, activityMonitoringInterval);
                     editor.apply();
 
                     savedConfig.setVersion(version);
@@ -154,6 +159,7 @@ public class BuddyPreferenceService {
                     savedConfig.setCommonMaxCellularRecords(cellularMaxRecords);
                     savedConfig.setCommonMaxErrorRecords(errorMaxRecords);
                     savedConfig.setCommonMaxRecordsToDelete(maxRecordsToDelete);
+                    savedConfig.setAndroidActivityMonitoringInterval(activityMonitoringInterval);
                     savedConfig.setAndroidLocationPowerAccuracy(locationPowerAccuracy);
                     savedConfig.setAndroidLocationUpdateInterval(locationUpdateInterval);
                     savedConfig.setAndroidLocationFastestUpdateInterval(locationFastestUpdateInterval);

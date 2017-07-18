@@ -851,7 +851,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     public void onConnected() {
         PLog.i(TAG, "service onConnected");
         try {
-            ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates( googleApiClient, 3000, getPendingIntent() );
+            ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates( googleApiClient, configuration.get().getAndroidActivityMonitoringInterval(), getPendingIntent() );
 
             // location service can throw an exception if permissions are not set
 

@@ -242,4 +242,16 @@ public class BuddyConfigurationTest {
         assertEquals(version, configuration.getVersion());
     }
 
+    @Test
+    public void testSetAndGetActivityMonitorInterval() throws Exception {
+        // arrange
+        BuddyConfiguration configuration = new BuddyConfiguration();
+        long activityMonitorInterval = 9;
+
+        // act
+        configuration.setAndroidActivityMonitoringInterval(activityMonitorInterval);
+
+        // assert
+        assertEquals(activityMonitorInterval, configuration.getAndroidActivityMonitoringInterval());
+    }
 }

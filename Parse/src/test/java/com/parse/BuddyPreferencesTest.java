@@ -41,6 +41,7 @@ public class BuddyPreferencesTest {
     private long cellularMaxRecords = 109;
     private long errorMaxRecords = 110;
     private long maxRecordsToDelete = 111;
+    private long androidActivityMonitoringInterval = 112;
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -247,5 +248,17 @@ public class BuddyPreferencesTest {
 
         // assert
         assertEquals(epoch, configuration.getLastUploadedEpoch());
+    }
+
+    @Test
+    public void testGetConfigActivityMonitorInterval() throws Exception {
+        // arrange
+        when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigActivityMonitorInterval, 0)).thenReturn(androidActivityMonitoringInterval);
+
+        // act
+        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+
+        // assert
+        assertEquals(androidActivityMonitoringInterval, configuration.getAndroidActivityMonitoringInterval());
     }
 }
