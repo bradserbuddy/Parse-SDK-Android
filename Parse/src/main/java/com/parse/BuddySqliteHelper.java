@@ -23,7 +23,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
     public static final String TAG = "com.parse.BuddySqliteHelper";
     private static final String DATABASE_NAME = "Buddy.db";
     private static SQLiteDatabase db;
-    private static int dbVersion = 1; // bump up on every release
+    private static final int dbVersion = 1; // bump up on every release
 
     public static synchronized BuddySqliteHelper getInstance() {
         if (Instance == null) {
@@ -37,6 +37,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        PLog.i(TAG, "onCreate");
         try {
             CreateLocationsTable(db);
             CreateCellularTable(db);
@@ -58,7 +59,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
     private void CreateLocationsTable(SQLiteDatabase db) {
         String query = String.format("create table %s ( %s text primary key, %s integer(4) default " +
                         "(cast(strftime('%%s', 'now') as int)) , %s real, %s real, %s real, %s real, " +
-                        "%s real, %s real, %s real, %s real, %s real )",
+                        "%s real, %s real, %s real, %s real, %s real, %s text )",
                 BuddySqliteLocationTableKeys.TableName,
                 BuddySqliteLocationTableKeys.Uuid,
                 BuddySqliteLocationTableKeys.Timestamp,
@@ -70,7 +71,8 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
                 BuddySqliteLocationTableKeys.BearingAccuracy,
                 BuddySqliteLocationTableKeys.Speed,
                 BuddySqliteLocationTableKeys.SpeedAccuracy,
-                BuddySqliteLocationTableKeys.VerticalAccuracy);
+                BuddySqliteLocationTableKeys.VerticalAccuracy,
+                BuddySqliteLocationTableKeys.Activity);
         db.execSQL(query);
     }
 
@@ -85,19 +87,34 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
+        PLog.i(TAG, "onUpgrade");
+
         try {
-            String query = String.format("drop table if exists %s", BuddySqliteLocationTableKeys.TableName);
-            db.execSQL(query);
+            dropTable(database, BuddySqliteLocationTableKeys.TableName);
+            dropTable(database, BuddySqliteCellularTableKeys.TableName);
+            dropTable(database, BuddySqliteErrorTableKeys.TableName);
 
-            query = String.format("drop table if exists %s", BuddySqliteCellularTableKeys.TableName);
-            db.execSQL(query);
-
-            onCreate(db);
+            onCreate(database);
         }
         catch (Exception e) {
             PLog.e(TAG, e.getMessage());
         }
+    }
+
+    void dropTable(SQLiteDatabase database, String tableName) {
+        try {
+            String query = String.format("drop table if exists %s", tableName);
+            database.execSQL(query);
+        } catch (Exception e) {
+            PLog.e(TAG, e.getMessage());
+        }
+    }
+
+    @Override
+    public void onDowngrade(SQLiteDatabase database, int oldVersion, int newVersion) {
+        PLog.i(TAG, "onDowngrade");
+        onUpgrade(database, oldVersion, newVersion);
     }
 
     boolean openDatabase() {
@@ -114,7 +131,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
         return isSuccessful;
     }
 
-    public void logError(String tag, String message) {
+    void logError(String tag, String message) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(BuddySqliteErrorTableKeys.Uuid, UUID.randomUUID().toString());
         String errorMessage = String.format("%s - %s", tag, message );
@@ -138,17 +155,6 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
 
         return result;
     }
-
-//    public void closeDB() {
-//        if (db == null) {
-//            try {
-//                db.close();
-//            }
-//            catch (Exception e) {
-//                PLog.e(TAG, e.getMessage());
-//            }
-//        }
-//    }
 
     public void cleanUp(BuddyConfiguration configuration) {
         if (openDatabase()) {
@@ -279,6 +285,9 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
 //                result.put(BuddySqliteLocationTableKeys.SpeedAccuracy.toLowerCase(),speedAccuracy);
 //                float verticalAccuracy = cursor.getFloat(cursor.getColumnIndex(BuddySqliteLocationTableKeys.VerticalAccuracy));
 //                result.put(BuddySqliteLocationTableKeys.VerticalAccuracy.toLowerCase(),verticalAccuracy);
+                String activity = cursor.getString(cursor.getColumnIndex(BuddySqliteLocationTableKeys.Activity));
+                JSONObject activityJSON = new JSONObject(activity);
+                result.put(BuddySqliteLocationTableKeys.Activity, activityJSON);
             }
 
         } catch (JSONException e) {
