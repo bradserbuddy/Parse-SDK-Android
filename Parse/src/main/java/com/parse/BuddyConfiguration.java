@@ -17,6 +17,7 @@ public class BuddyConfiguration {
     private boolean androidUploadCellular;
     private boolean androidUploadLocation;
     private long lastUploadedEpoch;
+    private long androidActivityMonitoringInterval;
 
     public long getCommonCellularPushBatchSize() {
         return commonCellularPushBatchSize;
@@ -144,5 +145,13 @@ public class BuddyConfiguration {
 
     public void setCommonMaxErrorRecords(long commonMaxErrorRecords) {
         this.commonMaxErrorRecords = commonMaxErrorRecords;
+    }
+
+    public long getAndroidActivityMonitoringInterval() {
+        return androidActivityMonitoringInterval;
+    }
+
+    public void setAndroidActivityMonitoringInterval(long androidActivityMonitoringInterval) {
+        this.androidActivityMonitoringInterval = androidActivityMonitoringInterval;
     }
 }

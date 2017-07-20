@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicReference;
   private AtomicReference<ParseQueryController> queryController = new AtomicReference<>();
   private AtomicReference<ParseFileController> fileController = new AtomicReference<>();
   private AtomicReference<ParseAnalyticsController> analyticsController = new AtomicReference<>();
-  private AtomicReference<BuddyAltDataController> locationsController = new AtomicReference<>();
+  private AtomicReference<BuddyAltDataController> altDataController = new AtomicReference<>();
   private AtomicReference<ParseCloudCodeController> cloudCodeController = new AtomicReference<>();
   private AtomicReference<ParseConfigController> configController = new AtomicReference<>();
   private AtomicReference<ParsePushController> pushController = new AtomicReference<>();
@@ -74,7 +74,7 @@ import java.util.concurrent.atomic.AtomicReference;
     pushController.set(null);
     pushChannelsController.set(null);
     defaultACLController.set(null);
-
+    altDataController.set(null);
     localIdManager.set(null);
   }
 
@@ -199,13 +199,20 @@ import java.util.concurrent.atomic.AtomicReference;
     return analyticsController.get();
   }
 
-  public BuddyAltDataController getLocationsController() {
-    if (locationsController.get() == null) {
+  public BuddyAltDataController getAltDataController() {
+    if (altDataController.get() == null) {
       // TODO(mengyan): Do not rely on Parse global
-      locationsController.compareAndSet(null,
+      altDataController.compareAndSet(null,
           new BuddyAltDataController(Parse.getEventuallyQueue()));
     }
-    return locationsController.get();
+    return altDataController.get();
+  }
+
+  public void registerAltDataController(BuddyAltDataController controller) {
+    if (!altDataController.compareAndSet(null, controller)) {
+      throw new IllegalStateException(
+              "Buddy Alt Data controller was already registered: " + altDataController.get());
+    }
   }
 
   public void registerAnalyticsController(ParseAnalyticsController controller) {

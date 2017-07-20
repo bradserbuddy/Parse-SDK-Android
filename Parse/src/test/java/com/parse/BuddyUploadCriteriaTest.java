@@ -250,21 +250,10 @@ public class BuddyUploadCriteriaTest {
         // arrange
 
         // act
-        BuddyUploadStatus status = buddyUploadCriteria.startUpload();
+        int jobsCount = buddyUploadCriteria.startUpload();
 
         // assert
-        assertEquals(1, status.getJobsCount());
-    }
-
-    @Test
-    public void testStartUploadSetsIsUploadingFlag() throws Exception {
-        // arrange
-
-        // act
-        BuddyUploadStatus status = buddyUploadCriteria.startUpload();
-
-        // assert
-        assertEquals(true, status.isUploading());
+        assertEquals(1, jobsCount);
     }
 
     @Test
@@ -273,22 +262,10 @@ public class BuddyUploadCriteriaTest {
         buddyUploadCriteria.startUpload();
 
         // act
-        BuddyUploadStatus status = buddyUploadCriteria.startUpload();
+        int jobsCount = buddyUploadCriteria.startUpload();
 
         // assert
-        assertEquals(2, status.getJobsCount());
-    }
-
-    @Test
-    public void testStartUploadWhileUploadingKeepsUploadingFlagSet() throws Exception {
-        // arrange
-        buddyUploadCriteria.startUpload();
-
-        // act
-        BuddyUploadStatus status = buddyUploadCriteria.startUpload();
-
-        // assert
-        assertEquals(true, status.isUploading());
+        assertEquals(2, jobsCount);
     }
 
     @Test
@@ -298,39 +275,10 @@ public class BuddyUploadCriteriaTest {
         buddyUploadCriteria.startUpload();
 
         // act
-        BuddyUploadStatus status = buddyUploadCriteria.endUpload(context);
+        int jobsCount = buddyUploadCriteria.endUpload(context);
 
         // assert
-        assertEquals(0, status.getJobsCount());
-    }
-
-    @Test
-    public void testEndUploadResetsIsUploadingFlagIfNoActiveJobs() throws Exception {
-        // arrange
-        setupSharedPreferencesAndEditorMocks();
-
-        buddyUploadCriteria.startUpload();
-
-        // act
-        BuddyUploadStatus status = buddyUploadCriteria.endUpload(context);
-
-        // assert
-        assertEquals(false, status.isUploading());
-    }
-
-    @Test
-    public void testEndUploadMaintainsIsUploadingFlagIfThereAreActiveJobs() throws Exception {
-        // arrange
-        setupSharedPreferencesAndEditorMocks();
-        buddyUploadCriteria.startUpload();
-        buddyUploadCriteria.startUpload();
-
-        // act
-        BuddyUploadStatus status = buddyUploadCriteria.endUpload(context);
-
-        // assert
-        assertEquals(true, status.isUploading());
-        assertEquals(1, status.getJobsCount());
+        assertEquals(0, jobsCount);
     }
 
     @Test
@@ -351,11 +299,10 @@ public class BuddyUploadCriteriaTest {
         }
 
         executor.awaitTermination(5, TimeUnit.SECONDS);
-        BuddyUploadStatus status = buddyUploadCriteria.endUpload(context);
+        int jobsCount = buddyUploadCriteria.endUpload(context);
 
         // assert
-        assertEquals(true, status.isUploading());
-        assertEquals(9, status.getJobsCount());
+        assertEquals(9, jobsCount);
     }
 
     private void setupSharedPreferencesAndEditorMocks() {

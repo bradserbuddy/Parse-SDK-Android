@@ -37,6 +37,7 @@ import android.telephony.gsm.GsmCellLocation;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
@@ -45,6 +46,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -84,7 +86,6 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     private static GoogleApiClient googleApiClient;
     private static LostApiClient lostApiClient;
     private static final String configUrl = "https://cdn.parse.buddy.com/sdk/config.json";
-    private static ActivityManager activityManager;
     private static boolean loadingNewConfiguration = false;
     private static Context context;
     private static final AtomicReference<BuddyConfiguration> configuration = new AtomicReference<BuddyConfiguration>();
@@ -106,39 +107,21 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     }
 
     private void uploadApplicationsList() {
-        PackageManager pm = context.getPackageManager();
-
-        ArrayList<String> appNames = new ArrayList<>();
-        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
-        for (ApplicationInfo appInfo : apps ) {
-            if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0 && (appInfo.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) == 0) {
-                PLog.i(TAG, appInfo.processName + " , " + appInfo.describeContents() + " , " + appInfo.className);
-                appNames.add(appInfo.processName);
-            }
+        JSONObject applicationsObject =  BuddyApplicationService.getAppNames(context,configuration.get().getVersion(), getDeviceId());
+        if (applicationsObject.has("apps")) {
+            BuddyMetaData.uploadMetaDataInBackground("apps", applicationsObject, new SaveCallback() {
+                @Override
+                public void done(ParseException e) {
+                    if (e == null) {
+                        // success
+                        PLog.i(TAG, "apps data uploaded");
+                    } else {
+                        PLog.i(TAG, "apps data upload failed");
+                        handleUploadError(e);
+                    }
+                }
+            });
         }
-
-        JSONObject applicationsObject = new JSONObject();
-        try {
-            applicationsObject.put("apps", new JSONArray(appNames));
-            long deviceIdLong = getDeviceId();
-            applicationsObject.put("deviceId", deviceIdLong);
-            applicationsObject.put("buddySdkVersion", configuration.get().getVersion());
-        } catch (JSONException e) {
-            BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-        }
-
-        trackEventInBackground("apps", applicationsObject, new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-            if (e == null) {
-                // success
-                PLog.i(TAG, "apps data uploaded");
-            } else {
-                PLog.i(TAG, "apps data upload failed");
-                LoadNewConfiguration();
-            }
-            }
-        });
     }
 
     private void stopCellularInfoLogTimer() {
@@ -164,9 +147,12 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     private void saveCellularInformation() {
         if (!isInBackground()) {
             TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-            if (telephonyManager != null) {
+            if (telephonyManager == null) {
+                BuddySqliteHelper.getInstance().logError(TAG, "TelephonyManager is null");
+            }
+            else {
                 try {
-                    JSONObject cellularInfoObject = getCellInformation(telephonyManager);
+                    JSONObject cellularInfoObject = BuddyCellularService.getCellInformation(telephonyManager);
 
                     try {
                         String body = cellularInfoObject.toString(0);
@@ -187,188 +173,9 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         }
     }
 
-    private JSONObject getCellInformation(TelephonyManager telephonyManager) {
-        JSONObject cellInformation = new JSONObject();
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            int dataNetworkType = telephonyManager.getDataNetworkType();
-            try {
-                cellInformation.put("DataNetworkType",dataNetworkType);
-            } catch (JSONException e) {
-                BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-            }
-        }
-
-        JSONArray cellInformationArray = new JSONArray();
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            List<CellInfo> allCellInfo = telephonyManager.getAllCellInfo();
-
-            if (allCellInfo != null) {
-                for (CellInfo cellInfo : allCellInfo) {
-                    JSONObject cellularInfoObject = new JSONObject();
-                    try {
-                        cellularInfoObject.put("IsRegistered", cellInfo.isRegistered());
-                    } catch (JSONException e) {
-                        BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-                    }
-
-                    if (cellInfo instanceof CellInfoGsm) {
-                        //PLog.i(TAG, "GSM network");
-                        CellInfoGsm cellInfoGsm = (CellInfoGsm) cellInfo;
-                        CellIdentityGsm identityGSM = cellInfoGsm.getCellIdentity();
-                        CellSignalStrengthGsm signalStrengthGsm = cellInfoGsm.getCellSignalStrength();
-
-                        try {
-                            cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.GSM.toString());
-                            cellularInfoObject.put("CellId", identityGSM.getCid());
-                            cellularInfoObject.put("MobileCountryCode", identityGSM.getMcc());
-                            cellularInfoObject.put("LocationAreaCode", identityGSM.getLac());
-                            cellularInfoObject.put("MobileNetworkCode", identityGSM.getMnc());
-
-                            cellularInfoObject.put("AsuLevel", signalStrengthGsm.getAsuLevel());
-                            cellularInfoObject.put("SignalStrengthDbm", signalStrengthGsm.getDbm());
-                            cellularInfoObject.put("SignalLevel", signalStrengthGsm.getLevel());
-
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                cellularInfoObject.put("AbsoluteRFChannelNo", identityGSM.getArfcn());
-                                cellularInfoObject.put("BaseStationIdCode", identityGSM.getBsic());
-                            }
-
-                        } catch (JSONException e) {
-                            BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-                        }
-                    } else if (cellInfo instanceof CellInfoCdma) {
-                        //PLog.i(TAG, "CDMA network");
-                        CellInfoCdma cellInfoCdma = (CellInfoCdma) cellInfo;
-                        CellIdentityCdma identityCdma = cellInfoCdma.getCellIdentity();
-                        CellSignalStrengthCdma signalStrengthCdma = cellInfoCdma.getCellSignalStrength();
-
-                        try {
-                            cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.CDMA.toString());
-                            cellularInfoObject.put("Latitude", identityCdma.getLatitude());
-                            cellularInfoObject.put("BaseStationId", identityCdma.getBasestationId());
-                            cellularInfoObject.put("Longitude", identityCdma.getLongitude());
-                            cellularInfoObject.put("NetworkId", identityCdma.getNetworkId());
-                            cellularInfoObject.put("SystemId", identityCdma.getSystemId());
-                            cellularInfoObject.put("AsuLevel", signalStrengthCdma.getAsuLevel());
-                            cellularInfoObject.put("SignalStrengthDbm", signalStrengthCdma.getDbm());
-                            cellularInfoObject.put("SignalLevel", signalStrengthCdma.getLevel());
-
-                        } catch (JSONException e) {
-                            BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-                        }
-
-                    } else if (cellInfo instanceof CellInfoWcdma) {
-                        //PLog.i(TAG, "WCDMA network");
-                        CellInfoWcdma cellInfoWcdma = (CellInfoWcdma) cellInfo;
-                        CellIdentityWcdma identityWcdma = null;
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                            identityWcdma = cellInfoWcdma.getCellIdentity();
-                            CellSignalStrengthWcdma signalStrengthWcdma = cellInfoWcdma.getCellSignalStrength();
-
-                            try {
-                                cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.WCDMA.toString());
-                                cellularInfoObject.put("CellId", identityWcdma.getCid());
-                                cellularInfoObject.put("MobileCountryCode", identityWcdma.getMcc());
-                                cellularInfoObject.put("LocationAreaCode", identityWcdma.getLac());
-                                cellularInfoObject.put("MobileNetworkCode", identityWcdma.getMnc());
-                                cellularInfoObject.put("PrimaryScramblingCode", identityWcdma.getPsc());
-
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    cellularInfoObject.put("UMTSAbsoluteRFChannelNo", identityWcdma.getUarfcn());
-                                }
-
-                                cellularInfoObject.put("AsuLevel", signalStrengthWcdma.getAsuLevel());
-                                cellularInfoObject.put("SignalStrengthDbm", signalStrengthWcdma.getDbm());
-                                cellularInfoObject.put("SignalLevel", signalStrengthWcdma.getLevel());
-
-                            } catch (JSONException e) {
-                                BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-                            }
-                        }
-                    } else if (cellInfo instanceof CellInfoLte) {
-                        //PLog.i(TAG, "Other Lte network");
-                        CellInfoLte cellInfoLte = (CellInfoLte) cellInfo;
-                        CellIdentityLte cellIdentityLte = cellInfoLte.getCellIdentity();
-                        CellSignalStrengthLte signalStrengthLte = cellInfoLte.getCellSignalStrength();
-
-                        try {
-                            cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.LTE.toString());
-                            cellularInfoObject.put("CellId", cellIdentityLte.getCi());
-                            cellularInfoObject.put("MobileCountryCode", cellIdentityLte.getMcc());
-                            cellularInfoObject.put("MobileNetworkCode", cellIdentityLte.getMnc());
-                            cellularInfoObject.put("PhysicalCellId", cellIdentityLte.getPci());
-                            cellularInfoObject.put("TrackingAreaCode", cellIdentityLte.getTac());
-
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                cellularInfoObject.put("AbsoluteRFChannelNo", cellIdentityLte.getEarfcn());
-                            }
-
-                            cellularInfoObject.put("AsuLevel", signalStrengthLte.getAsuLevel());
-                            cellularInfoObject.put("SignalStrengthDbm", signalStrengthLte.getDbm());
-                            cellularInfoObject.put("SignalLevel", signalStrengthLte.getLevel());
-                            cellularInfoObject.put("TimingAdvance", signalStrengthLte.getTimingAdvance());
-
-                        } catch (JSONException e) {
-                            BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-                        }
-                    }
-
-                    if (cellularInfoObject.length() > 0) {
-                        cellInformationArray.put(cellularInfoObject);
-                    }
-                }
-            }
-        }
-        else {
-            // other api levels
-            CellLocation cellLocation = telephonyManager.getCellLocation();
-
-            if (cellLocation instanceof  CdmaCellLocation) {
-                CdmaCellLocation cdmaCellLocation = (CdmaCellLocation)cellLocation;
-                JSONObject cellularInfoObject = new JSONObject();
-
-                try {
-                    cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.CDMA.toString());
-                    cellularInfoObject.put("Latitude", cdmaCellLocation.getBaseStationLatitude());
-                    cellularInfoObject.put("BaseStationId", cdmaCellLocation.getBaseStationId());
-                    cellularInfoObject.put("Longitude", cdmaCellLocation.getBaseStationLongitude());
-                    cellularInfoObject.put("NetworkId", cdmaCellLocation.getNetworkId());
-                    cellularInfoObject.put("SystemId", cdmaCellLocation.getSystemId());
-
-                    cellInformationArray.put(cellularInfoObject);
-                } catch (JSONException e) {
-                    BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-                }
-            }
-            else  if (cellLocation instanceof  GsmCellLocation) {
-                GsmCellLocation gsmCellLocation = (GsmCellLocation)cellLocation;
-                JSONObject cellularInfoObject = new JSONObject();
-
-                try {
-                    cellularInfoObject.put("NetworkType", BuddyCellularNetworkType.GSM.toString());
-                    cellularInfoObject.put("CellId", gsmCellLocation.getCid());
-                    cellularInfoObject.put("PrimaryScramblingCode", gsmCellLocation.getPsc());
-                    cellularInfoObject.put("LocationAreaCode", gsmCellLocation.getLac());
-
-                    cellInformationArray.put(cellularInfoObject);
-                } catch (JSONException e) {
-                    BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-                }
-            }
-        }
-        try {
-            cellInformation.put("data",cellInformationArray);
-        } catch (JSONException e) {
-            BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-        }
-
-        return cellInformation;
-    }
-
     private static boolean isInBackground() {
         boolean isBackground = false;
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningAppProcessInfo> processList = activityManager.getRunningAppProcesses();
         if (processList == null) {
             // can't find the app, so it is background because we don't want to log cell info.
@@ -393,18 +200,27 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         JSONObject deviceInfoObject = new JSONObject();
 
         try {
-            long deviceIdLong = getDeviceId();
-            deviceInfoObject.put("deviceBrand", android.os.Build.BRAND);
-            deviceInfoObject.put("deviceModel", android.os.Build.MODEL);
-            deviceInfoObject.put("sdkVersion", android.os.Build.VERSION.RELEASE);
-            deviceInfoObject.put("sdkVersionNumber", android.os.Build.VERSION.SDK_INT);
-            deviceInfoObject.put("deviceId", deviceIdLong);
-            deviceInfoObject.put("buddySdkVersion", configuration.get().getVersion());
+            BigInteger deviceId = getDeviceId();
+            deviceInfoObject.put("brand", Build.BRAND);
+            deviceInfoObject.put("model", Build.MODEL);
+            deviceInfoObject.put("board", Build.BOARD);
+            deviceInfoObject.put("device", Build.DEVICE);
+            deviceInfoObject.put("display", Build.DISPLAY);
+            deviceInfoObject.put("fingerprint", Build.FINGERPRINT);
+            deviceInfoObject.put("bootloader", Build.BOOTLOADER);
+            deviceInfoObject.put("hardware", Build.HARDWARE);
+            deviceInfoObject.put("host", Build.HOST);
+            deviceInfoObject.put("manufacturer", Build.MANUFACTURER);
+            deviceInfoObject.put("product", Build.PRODUCT);
+            deviceInfoObject.put("sdkVersionRelease", Build.VERSION.RELEASE);
+            deviceInfoObject.put("sdkVersionNumber", Build.VERSION.SDK_INT);
+            deviceInfoObject.put("deviceId", deviceId);
+            deviceInfoObject.put("version", configuration.get().getVersion());
         } catch (JSONException e) {
             BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
         }
 
-        trackEventInBackground("device", deviceInfoObject, new SaveCallback() {
+        BuddyMetaData.uploadMetaDataInBackground("device", deviceInfoObject, new SaveCallback() {
             @Override
             public void done(ParseException e) {
             if (e == null) {
@@ -412,7 +228,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 PLog.i(TAG, "device data uploaded");
             } else {
                 PLog.i(TAG, "device data upload failed");
-                LoadNewConfiguration();
+                handleUploadError(e);
             }
             }
         });
@@ -432,12 +248,12 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     JSONObject deviceStatus = getDeviceStatus();
                     JSONObject parametersObject = new JSONObject();
                     parametersObject.put("locations", items);
-                    long deviceIdLong = getDeviceId();
-                    parametersObject.put("deviceId", deviceIdLong);
+                    BigInteger deviceId = getDeviceId();
+                    parametersObject.put("deviceId", deviceId);
                     parametersObject.put("device_status", deviceStatus);
-                    parametersObject.put("buddySdkVersion", configuration.get().getVersion());
+                    parametersObject.put("version", configuration.get().getVersion());
 
-                    trackEventInBackground("location", parametersObject, new SaveCallback() {
+                    BuddyMetaData.uploadMetaDataInBackground("location", parametersObject, new SaveCallback() {
                         @Override
                         public void done(ParseException e) {
                         if (e == null) {
@@ -460,7 +276,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                         } else {
                             PLog.i(TAG, "Locations upload failed");
                             uploadCompleted();
-                            LoadNewConfiguration();
+                            handleUploadError(e);
                         }
                         }
                     });
@@ -610,12 +426,12 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     final String[] ids = (String[]) cellularInfoItems.get("ids");
 
                     JSONObject parametersObject = new JSONObject();
-                    long deviceIdLong = getDeviceId();
-                    parametersObject.put("deviceId", deviceIdLong);
+                    BigInteger deviceId = getDeviceId();
+                    parametersObject.put("deviceId", deviceId);
                     parametersObject.put("cellular", items);
-                    parametersObject.put("buddySdkVersion", configuration.get().getVersion());
+                    parametersObject.put("version", configuration.get().getVersion());
 
-                    trackEventInBackground("cellular", parametersObject, new SaveCallback() {
+                    BuddyMetaData.uploadMetaDataInBackground("cellular", parametersObject, new SaveCallback() {
                         @Override
                         public void done(ParseException e) {
                             if (e == null) {
@@ -639,7 +455,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                             } else {
                                 PLog.i(TAG, "Cellular upload failed");
                                 uploadCompleted();
-                                LoadNewConfiguration();
+                                handleUploadError(e);
                             }
                         }
                     });
@@ -651,37 +467,21 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         }
     }
 
+    private void handleUploadError(ParseException e) {
+        if (e.getCode() == ParseException.VALIDATION_ERROR) {
+            LoadNewConfiguration();
+        }
+    }
+
     private void uploadCompleted() {
         uploadCriteria.endUpload(context);
         configuration.set(BuddyPreferenceService.getConfig(context));
     }
 
-    private long getDeviceId() {
+    private BigInteger getDeviceId() {
         String deviceIdString = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-        return Long.parseLong(deviceIdString, 16);
-    }
 
-    void trackEventInBackground(String name, JSONObject parametersObject, SaveCallback callback) {
-        ParseTaskUtils.callbackOnMainThreadAsync(trackEventInBackground(name, parametersObject), callback);
-    }
-
-    Task<Void> trackEventInBackground(final String name,
-                                      final JSONObject parametersObject) {
-        if (name == null || name.trim().length() == 0) {
-            throw new IllegalArgumentException("A name for the custom event must be provided.");
-        }
-
-        return ParseUser.getCurrentSessionTokenAsync().onSuccessTask(new Continuation<String, Task<Void>>() {
-            @Override
-            public Task<Void> then(Task<String> task) throws Exception {
-                String sessionToken = task.getResult();
-                return getLocationsController().trackMetaInBackground(name, parametersObject, sessionToken);
-            }
-        });
-    }
-
-    /* package for test */ BuddyAltDataController getLocationsController() {
-        return ParseCorePlugins.getInstance().getLocationsController();
+        return new BigInteger(deviceIdString, 16);
     }
 
     private void setupEvents() {
@@ -785,8 +585,6 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
     void setupServices() {
         PLog.i(TAG, "setupServices");
-        activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-
         if (configuration.get().shouldLogCellular()) {
             startCellularInfoLogTimer();
         }
@@ -801,21 +599,21 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     }
 
     private void uploadErrors() {
-        PLog.i(TAG, "Uploading error logs");
         final JSONObject errors = BuddySqliteHelper.getInstance().get(BuddySqliteTableType.Error, 0);
 
         if (errors.has("items") && errors.has("ids")) {
+            PLog.i(TAG, "Uploading error logs");
             try {
                 final JSONArray items = (JSONArray) errors.get("items");
                 if (items.length() > 0) {
                     final String[] ids = (String[]) errors.get("ids");
                     JSONObject parametersObject = new JSONObject();
                     parametersObject.put("errors", items);
-                    long deviceIdLong = getDeviceId();
-                    parametersObject.put("deviceId", deviceIdLong);
-                    parametersObject.put("buddySdkVersion", configuration.get().getVersion());
+                    BigInteger deviceId = getDeviceId();
+                    parametersObject.put("deviceId", deviceId);
+                    parametersObject.put("version", configuration.get().getVersion());
 
-                    trackEventInBackground("error", parametersObject, new SaveCallback() {
+                    BuddyMetaData.uploadMetaDataInBackground("error", parametersObject, new SaveCallback() {
                         @Override
                         public void done(ParseException e) {
                         if (e == null) {
@@ -827,11 +625,9 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                             if (items.length() == rowsAffected) {
                                 PLog.i(TAG, "errors deleted");
                             }
-                            uploadCompleted();
                         } else {
                             PLog.i(TAG, "errors upload failed");
-                            uploadCompleted();
-                            LoadNewConfiguration();
+                            handleUploadError(e);
                         }
                         }
                     });
@@ -846,6 +642,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     private void createGoogleApiClient() {
         PLog.i(TAG, "setupServices GoogleApiClient.Builder");
         googleApiClient = new GoogleApiClient.Builder(context)
+                .addApi(LocationServices.API)
+                .addApi(ActivityRecognition.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
@@ -865,13 +663,15 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                             }
                         }
                     }
-                }).addApi(LocationServices.API).build();
+                })
+                .build();
 
         startGoogleApiClient();
     }
 
     @Override
     public void onConnected(Bundle bundle) {
+
         onConnected();
     }
 
@@ -882,8 +682,10 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
     @Override
     public void onConnected() {
-        PLog.i(TAG, "location service onConnected");
+        PLog.i(TAG, "service onConnected");
         try {
+            ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates( googleApiClient, configuration.get().getAndroidActivityMonitoringInterval(), getPendingIntent() );
+
             // location service can throw an exception if permissions are not set
 
             if (lostApiClient == null) {
@@ -916,7 +718,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
             PLog.i(TAG, "setupServices: end GoogleApiClient.Builder");
         } catch (SecurityException securityException) {
-            PLog.w(TAG, "setupServices: Missing ACCESS_FINE_LOCATION permission in the AndroidManifest");
+            PLog.w(TAG, "setupServices: Missing ACCESS_FINE_LOCATION or com.google.android.gms.permission.ACTIVITY_RECOGNITION permission in the AndroidManifest");
             googleApiClient.disconnect();
         }
     }
