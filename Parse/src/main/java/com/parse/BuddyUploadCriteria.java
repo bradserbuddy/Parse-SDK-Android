@@ -8,7 +8,8 @@ import android.os.BatteryManager;
 
 class BuddyUploadCriteria {
     private BuddyPowerConnectionStatus powerStatus = BuddyPowerConnectionStatus.Unknown;
-    private BuddyConnectivityStatus connectivityStatus = BuddyConnectivityStatus.Unknown;
+    private BuddyWifiConnectivityStatus wifiConnectivityStatus = BuddyWifiConnectivityStatus.Unknown;
+    private BuddyCellularConnectivityStatus cellularConnectivityStatus = BuddyCellularConnectivityStatus.Unknown;
     private boolean hasEnoughBattery = false;
     private static int uploadJobsCount = 0;
     private final int milliSecondsPerDay = 24 * 60 * 60 * 1000;
@@ -38,11 +39,26 @@ class BuddyUploadCriteria {
     }
 
     public BuddyConnectivityStatus getConnectivityStatus() {
-        return connectivityStatus;
-    }
+        BuddyConnectivityStatus connectivityStatus = BuddyConnectivityStatus.Unknown;
 
-    public void setConnectivityStatus(BuddyConnectivityStatus status) {
-        connectivityStatus = status;
+        if (cellularConnectivityStatus != BuddyCellularConnectivityStatus.Connected &&
+                wifiConnectivityStatus != BuddyWifiConnectivityStatus.Connected) {
+            connectivityStatus = BuddyConnectivityStatus.Disconnected;
+        }
+        else if (cellularConnectivityStatus != BuddyCellularConnectivityStatus.Connected &&
+                wifiConnectivityStatus == BuddyWifiConnectivityStatus.Connected) {
+            connectivityStatus = BuddyConnectivityStatus.Wifi;
+        }
+        else if (cellularConnectivityStatus == BuddyCellularConnectivityStatus.Connected &&
+                wifiConnectivityStatus != BuddyWifiConnectivityStatus.Connected) {
+            connectivityStatus = BuddyConnectivityStatus.Cellular;
+        }
+        else if (cellularConnectivityStatus == BuddyCellularConnectivityStatus.Connected &&
+                wifiConnectivityStatus == BuddyWifiConnectivityStatus.Connected) {
+            connectivityStatus = BuddyConnectivityStatus.CellularAndWifi;
+        }
+
+        return connectivityStatus;
     }
 
     public BuddyPowerConnectionStatus getPowerStatus() {
@@ -55,23 +71,15 @@ class BuddyUploadCriteria {
 
     public boolean canUpload(Context context, BuddyConfiguration configuration) {
         boolean result = false;
+        BuddyConnectivityStatus connectivityStatus = getConnectivityStatus();
 
         if (uploadJobsCount == 0) {
-            if (System.currentTimeMillis() > configuration.getLastUploadedEpoch() + milliSecondsPerDay) {
-                if (connectivityStatus == BuddyConnectivityStatus.WifiConnected ||
-                        connectivityStatus == BuddyConnectivityStatus.CellularConnected) {
-                    if (powerStatus == BuddyPowerConnectionStatus.Connected || getHasEnoughBattery(context)) {
-                        result = true;
-                    }
-                }
-            }
-            else {
-                // within 24 hours
-                if (powerStatus == BuddyPowerConnectionStatus.Connected) {
-                    if (connectivityStatus == BuddyConnectivityStatus.WifiConnected) {
-                        result = true;
-                    }
-                }
+            if ((powerStatus == BuddyPowerConnectionStatus.Connected && connectivityStatus == BuddyConnectivityStatus.Wifi) || (System.currentTimeMillis() > configuration.getLastUploadedEpoch() + milliSecondsPerDay && (connectivityStatus == BuddyConnectivityStatus.Wifi ||
+                    connectivityStatus == BuddyConnectivityStatus.Cellular || connectivityStatus == BuddyConnectivityStatus.CellularAndWifi) && (powerStatus == BuddyPowerConnectionStatus.Connected || getHasEnoughBattery(context)))) {
+                // wifi and power connected, or
+                // long time since last upload, connected to network and power or has enough battery
+                result = true;
+                PLog.i(TAG, "in canUpload true");
             }
         }
 
@@ -104,5 +112,13 @@ class BuddyUploadCriteria {
 
         PLog.i(TAG, "endUpload - jobs = " + String.valueOf(uploadJobsCount));
         return uploadJobsCount;
+    }
+
+    public void setWifiConnectivityStatus(BuddyWifiConnectivityStatus wifiConnectivityStatus) {
+        this.wifiConnectivityStatus = wifiConnectivityStatus;
+    }
+
+    public void setCellularConnectivityStatus(BuddyCellularConnectivityStatus cellularConnectivityStatus) {
+        this.cellularConnectivityStatus = cellularConnectivityStatus;
     }
 }

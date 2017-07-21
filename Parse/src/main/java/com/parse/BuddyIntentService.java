@@ -21,15 +21,15 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class BuddyIntentService extends IntentService {
     private static AtomicReference<JSONObject> lastDetectedActivity = new AtomicReference<>();
+    public static final String TAG = "com.parse.BuddyIntentService";
 
     public BuddyIntentService() {
         super("BuddyIntentService");
-        lastDetectedActivity = new AtomicReference<>();
     }
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        PLog.i(BuddyAltDataTracker.TAG, "BuddyIntentService: " + (intent == null || intent.getAction() == null ? "" : intent.getAction()));
+        PLog.i(TAG, "BuddyIntentService: " + (intent == null || intent.getAction() == null ? "" : intent.getAction()));
 
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
@@ -62,19 +62,17 @@ public class BuddyIntentService extends IntentService {
                 contentValues.put(BuddySqliteLocationTableKeys.SpeedAccuracy,speedAccuracyMetersPerSecond);
                 contentValues.put(BuddySqliteLocationTableKeys.VerticalAccuracy,verticalAccuracyMeters);
 
+                String activity = "{\"name\": \"Unknown\", \"confidence\": 0}";
                 try {
-                    String activity = "{\"name\": \"Unknown\", \"confidence\": 0}";
                     if (lastDetectedActivity.get() != null) {
                         activity = lastDetectedActivity.get().toString(0);
+                        contentValues.put(BuddySqliteLocationTableKeys.Activity,activity);
                     }
-
-                    contentValues.put(BuddySqliteLocationTableKeys.Activity,activity);
                 } catch (Exception e) {
-                    BuddySqliteHelper.getInstance().logError(BuddyAltDataTracker.TAG, e.getMessage());
+                    BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
                 }
-
                 BuddySqliteHelper.getInstance().save(BuddySqliteTableType.Location,contentValues);
-                PLog.i(BuddyAltDataTracker.TAG, "saved location " + latitude + " , " + longitude);
+                PLog.i(TAG, "saved location " + latitude + " , " + longitude + ", activity = " + activity);
             } else {
                 if (intent != null && intent.getAction() != null &&
                         intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
@@ -105,44 +103,38 @@ public class BuddyIntentService extends IntentService {
         JSONObject buddyActivity = new JSONObject();
         try {
             String activityName = "";
+            int confidence = activity.getConfidence();
+
             switch (activity.getType()) {
                 case DetectedActivity.IN_VEHICLE: {
-                    PLog.i("ActivityRecogition", "In Vehicle: " + activity.getConfidence());
                     activityName = "In Vehicle";
                     break;
                 }
                 case DetectedActivity.ON_BICYCLE: {
-                    PLog.i("ActivityRecogition", "On Bicycle: " + activity.getConfidence());
                     activityName = "On Bicycle";
                     break;
                 }
                 case DetectedActivity.ON_FOOT: {
-                    PLog.i("ActivityRecogition", "On Foot: " + activity.getConfidence());
                     activityName = "On Foot";
                     break;
                 }
                 case DetectedActivity.RUNNING: {
-                    PLog.i("ActivityRecogition", "Running: " + activity.getConfidence());
                     activityName = "Running";
                     break;
                 }
                 case DetectedActivity.STILL: {
-                    PLog.i("ActivityRecogition", "Still: " + activity.getConfidence());
                     activityName = "Still";
                     break;
                 }
                 case DetectedActivity.TILTING: {
-                    PLog.i("ActivityRecogition", "Tilting: " + activity.getConfidence());
                     activityName = "Tilting";
                     break;
                 }
                 case DetectedActivity.WALKING: {
-                    PLog.i("ActivityRecogition", "Walking: " + activity.getConfidence());
                     activityName = "Walking";
                     break;
                 }
                 case DetectedActivity.UNKNOWN: {
-                    PLog.i("ActivityRecogition", "Unknown: " + activity.getConfidence());
                     activityName = "Unknown";
                     break;
                 }
@@ -150,11 +142,12 @@ public class BuddyIntentService extends IntentService {
 
             if (!activityName.isEmpty()) {
                 buddyActivity.put("name", activityName);
-                buddyActivity.put("confidence", activity.getConfidence());
+                buddyActivity.put("confidence", confidence);
                 lastDetectedActivity.set(buddyActivity);
+                PLog.i(TAG, "activity : " + activityName);
             }
-        } catch (JSONException e) {
-            BuddySqliteHelper.getInstance().logError(BuddyAltDataTracker.TAG, e.getMessage());
+        } catch (Exception e) {
+            BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
         }
     }
 
