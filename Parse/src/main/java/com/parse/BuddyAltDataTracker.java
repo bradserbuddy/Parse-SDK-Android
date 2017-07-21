@@ -7,8 +7,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -17,29 +15,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.telephony.CellIdentityCdma;
-import android.telephony.CellIdentityGsm;
-import android.telephony.CellIdentityLte;
-import android.telephony.CellIdentityWcdma;
-import android.telephony.CellInfo;
-import android.telephony.CellInfoCdma;
-import android.telephony.CellInfoGsm;
-import android.telephony.CellInfoLte;
-import android.telephony.CellInfoWcdma;
-import android.telephony.CellLocation;
-import android.telephony.CellSignalStrengthCdma;
-import android.telephony.CellSignalStrengthGsm;
-import android.telephony.CellSignalStrengthLte;
-import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.TelephonyManager;
-import android.telephony.cdma.CdmaCellLocation;
-import android.telephony.gsm.GsmCellLocation;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.mapzen.android.lost.api.LostApiClient;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,22 +30,17 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
-import bolts.Continuation;
-import bolts.Task;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import com.mapzen.android.lost.api.LostApiClient;
 
 
 /**
@@ -108,7 +86,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
     private void uploadApplicationsList() {
         JSONObject applicationsObject =  BuddyApplicationService.getAppNames(context,configuration.get().getVersion(), getDeviceId());
-        if (applicationsObject.has("apps")) {
+        if (applicationsObject != null && applicationsObject.has("apps")) {
             BuddyMetaData.uploadMetaDataInBackground("apps", applicationsObject, new SaveCallback() {
                 @Override
                 public void done(ParseException e) {
@@ -240,7 +218,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         final JSONObject locationInformation = BuddySqliteHelper.getInstance().get(BuddySqliteTableType.Location,
                 configuration.get().getCommonLocationPushBatchSize());
 
-        if (locationInformation.has("items") && locationInformation.has("ids")) {
+        if (locationInformation != null && locationInformation.has("items") && locationInformation.has("ids")) {
             try {
                 final JSONArray items = (JSONArray) locationInformation.get("items");
                 if (items.length() > 0) {
@@ -293,11 +271,14 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         try {
             String network = "disconnected";
             BuddyConnectivityStatus connectivityStatus = uploadCriteria.getConnectivityStatus();
-            if (connectivityStatus == BuddyConnectivityStatus.CellularConnected) {
+            if (connectivityStatus == BuddyConnectivityStatus.Cellular) {
                 network = "cellular";
             }
-            else if (connectivityStatus == BuddyConnectivityStatus.WifiConnected) {
+            else if (connectivityStatus == BuddyConnectivityStatus.Wifi) {
                 network = "wifi";
+            }
+            else if (connectivityStatus == BuddyConnectivityStatus.CellularAndWifi) {
+                network = "cellular and wifi";
             }
             deviceStatus.put("network", network);
 
@@ -495,10 +476,12 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 switch (intentAction) {
                     case Intent.ACTION_POWER_CONNECTED :
                         uploadCriteria.setPowerStatus(BuddyPowerConnectionStatus.Connected);
+                        PLog.i(TAG, "power connected ");
                         break;
 
                     case Intent.ACTION_POWER_DISCONNECTED :
                         uploadCriteria.setPowerStatus(BuddyPowerConnectionStatus.Disconnected);
+                        PLog.i(TAG, "power disconnected ");
                         break;
 
                     case Intent.ACTION_BATTERY_LOW:
@@ -511,11 +494,13 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
                         if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE && activeNetwork.isConnected()) {
                             // connected to the mobile network
-                            uploadCriteria.setConnectivityStatus(BuddyConnectivityStatus.CellularConnected);
+                            uploadCriteria.setCellularConnectivityStatus(BuddyCellularConnectivityStatus.Connected);
+                            PLog.i(TAG, "cellular connected ");
                         }
                         else {
                             // not connected to a cellular network
-                            uploadCriteria.setConnectivityStatus(BuddyConnectivityStatus.CellularDisconnected);
+                            uploadCriteria.setCellularConnectivityStatus(BuddyCellularConnectivityStatus.Disconnected);
+                            PLog.i(TAG, "cellular disconnected ");
                         }
 
                         break;
@@ -525,13 +510,12 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                         NetworkInfo.DetailedState detailedState = networkInformation.getDetailedState();
 
                         if (detailedState == NetworkInfo.DetailedState.CONNECTED) {
-                            uploadCriteria.setConnectivityStatus(BuddyConnectivityStatus.WifiConnected);
-                        }
-                        else  if (detailedState == NetworkInfo.DetailedState.DISCONNECTED) {
-                            uploadCriteria.setConnectivityStatus(BuddyConnectivityStatus.WifiDisconnected);
+                            uploadCriteria.setWifiConnectivityStatus(BuddyWifiConnectivityStatus.Connected);
+                            PLog.i(TAG, "wifi connected ");
                         }
                         else {
-                            uploadCriteria.setConnectivityStatus(BuddyConnectivityStatus.Unknown);
+                            uploadCriteria.setWifiConnectivityStatus(BuddyWifiConnectivityStatus.Disconnected);
+                            PLog.i(TAG, "wifi disconnected ");
                         }
                         break;
 
@@ -601,7 +585,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     private void uploadErrors() {
         final JSONObject errors = BuddySqliteHelper.getInstance().get(BuddySqliteTableType.Error, 0);
 
-        if (errors.has("items") && errors.has("ids")) {
+        if (errors != null && errors.has("items") && errors.has("ids")) {
             PLog.i(TAG, "Uploading error logs");
             try {
                 final JSONArray items = (JSONArray) errors.get("items");

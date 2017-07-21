@@ -123,16 +123,16 @@ public class BuddyUploadCriteriaTest {
     }
 
     @Test
-    public void testSetAndGetConnectivityStatus() throws Exception {
+    public void testSetAndGetWifiConnectivityStatus() throws Exception {
         // arrange
-        BuddyConnectivityStatus status = BuddyConnectivityStatus.CellularConnected;
+        BuddyWifiConnectivityStatus status = BuddyWifiConnectivityStatus.Connected;
 
         // act
-        buddyUploadCriteria.setConnectivityStatus(status);
+        buddyUploadCriteria.setWifiConnectivityStatus(status);
 
         // assert
         BuddyConnectivityStatus savedStatus = buddyUploadCriteria.getConnectivityStatus();
-        assertEquals(status, savedStatus);
+        assertEquals(BuddyConnectivityStatus.Wifi, savedStatus);
     }
 
     @Test
@@ -167,7 +167,7 @@ public class BuddyUploadCriteriaTest {
         // set last uploaded to a couple of days ago
         configuration.setLastUploadedEpoch(System.currentTimeMillis()-2*24*3600*1000);
         // wifi connected
-        buddyUploadCriteria.setConnectivityStatus(BuddyConnectivityStatus.WifiConnected);
+        buddyUploadCriteria.setWifiConnectivityStatus(BuddyWifiConnectivityStatus.Connected);
         buddyUploadCriteria.setPowerStatus(BuddyPowerConnectionStatus.Connected);
 
         // act
@@ -184,7 +184,7 @@ public class BuddyUploadCriteriaTest {
         // set last uploaded to a couple of days ago
         configuration.setLastUploadedEpoch(System.currentTimeMillis()-2*24*3600*1000);
         // wifi connected
-        buddyUploadCriteria.setConnectivityStatus(BuddyConnectivityStatus.CellularConnected);
+        buddyUploadCriteria.setCellularConnectivityStatus(BuddyCellularConnectivityStatus.Connected);
         buddyUploadCriteria.setPowerStatus(BuddyPowerConnectionStatus.Connected);
 
         // act
@@ -201,7 +201,7 @@ public class BuddyUploadCriteriaTest {
         // set last uploaded to a couple of days ago
         configuration.setLastUploadedEpoch(System.currentTimeMillis()-2*24*3600*1000);
         // wifi connected
-        buddyUploadCriteria.setConnectivityStatus(BuddyConnectivityStatus.CellularConnected);
+        buddyUploadCriteria.setCellularConnectivityStatus(BuddyCellularConnectivityStatus.Connected);
         buddyUploadCriteria.setPowerStatus(BuddyPowerConnectionStatus.Disconnected);
         buddyUploadCriteria.setHasEnoughBattery(Intent.ACTION_BATTERY_OKAY);
 
@@ -219,7 +219,7 @@ public class BuddyUploadCriteriaTest {
         // set last uploaded to a couple of days ago
         configuration.setLastUploadedEpoch(System.currentTimeMillis());
         // wifi connected
-        buddyUploadCriteria.setConnectivityStatus(BuddyConnectivityStatus.WifiConnected);
+        buddyUploadCriteria.setWifiConnectivityStatus(BuddyWifiConnectivityStatus.Connected);
         buddyUploadCriteria.setPowerStatus(BuddyPowerConnectionStatus.Connected);
 
         // act

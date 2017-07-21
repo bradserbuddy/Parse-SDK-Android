@@ -290,7 +290,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
                 result.put(BuddySqliteLocationTableKeys.Activity, activityJSON);
             }
 
-        } catch (JSONException e) {
+        } catch (Exception e) {
             PLog.e(TAG, e.getMessage());
         }
 
