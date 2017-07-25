@@ -8,6 +8,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class BuddyPreferenceService {
 
     public static final String TAG = "com.parse.BuddyPreferenceService";
@@ -77,7 +82,7 @@ public class BuddyPreferenceService {
         editor.apply();
     }
 
-    public static BuddyConfiguration update(Context context, JSONObject configJson) {
+    public static BuddyConfiguration update(Context context, JSONObject configJson, String applicationId) {
         BuddyConfiguration savedConfig = getConfig(context);
 
         try {
@@ -95,32 +100,17 @@ public class BuddyPreferenceService {
                 long errorMaxRecords = commonConfigItems.getLong(BuddyPreferenceKeys.preferenceConfigErrorMaxRecords);
                 long maxRecordsToDelete = commonConfigItems.getLong(BuddyPreferenceKeys.preferenceConfigMaxRecordsToDelete);
 
-
-                JSONObject deviceConfig = null;
-                JSONObject defaultConfig = null;
-                JSONObject usedConfig = null;
-
                 String deviceModel = Build.MANUFACTURER;
                 int apiLevel = android.os.Build.VERSION.SDK_INT;
 
+                BuddyRemoteConfigurations configurations = new BuddyRemoteConfigurations();
+
                 for(int i=0; i<androidConfigItems.length(); i++){
                     JSONObject androidConfigItem =  androidConfigItems.getJSONObject(i);
-                    String model = androidConfigItem.getString("model");
-
-                    if (model.equalsIgnoreCase("*") && androidConfigItem.getString("api-level").equalsIgnoreCase("*")) {
-                        defaultConfig = androidConfigItem;
-                    }
-                    else if (model.equalsIgnoreCase(deviceModel) && androidConfigItem.getInt("api-level") == apiLevel) {
-                        deviceConfig = androidConfigItem;
-                    }
+                    BuddyRemoteConfiguration configuration = new BuddyRemoteConfiguration(androidConfigItem, deviceModel, apiLevel, applicationId);
+                    configurations.add(configuration);
                 }
-
-                if (deviceConfig != null) {
-                    usedConfig = deviceConfig;
-                }
-                else if (defaultConfig != null) {
-                    usedConfig = defaultConfig;
-                }
+                JSONObject usedConfig = configurations.getValidConfig();
 
                 if (usedConfig != null) {
                     long locationPowerAccuracy = usedConfig.getLong(BuddyPreferenceKeys.preferenceConfigLocationPowerAccuracy);
