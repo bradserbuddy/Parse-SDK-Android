@@ -342,7 +342,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     String jsonData = response.body().string();
                     try {
                         JSONObject configJson = new JSONObject(jsonData);
-                        configuration.set(BuddyPreferenceService.update(context, configJson));
+                        String applicationId = ParsePlugins.get().applicationId();
+                        configuration.set(BuddyPreferenceService.update(context, configJson,applicationId));
 
                         configureLocationLogging();
                         configureCellularLogging();
@@ -668,7 +669,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     public void onConnected() {
         PLog.i(TAG, "service onConnected");
         try {
-            ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates( googleApiClient, configuration.get().getAndroidActivityMonitoringInterval(), getPendingIntent() );
+            long activityMonitoringInterval = configuration.get().getAndroidActivityMonitoringInterval();
+            ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates( googleApiClient, activityMonitoringInterval, getPendingIntent() );
 
             // location service can throw an exception if permissions are not set
 
