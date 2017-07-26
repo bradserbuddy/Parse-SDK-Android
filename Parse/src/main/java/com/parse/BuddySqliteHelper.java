@@ -286,7 +286,10 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
 //                float verticalAccuracy = cursor.getFloat(cursor.getColumnIndex(BuddySqliteLocationTableKeys.VerticalAccuracy));
 //                result.put(BuddySqliteLocationTableKeys.VerticalAccuracy.toLowerCase(),verticalAccuracy);
                 String activity = cursor.getString(cursor.getColumnIndex(BuddySqliteLocationTableKeys.Activity));
-                JSONObject activityJSON = new JSONObject(activity);
+                JSONObject activityJSON = new JSONObject();
+                if (activity != null) {
+                    activityJSON = new JSONObject(activity);
+                }
                 result.put(BuddySqliteLocationTableKeys.Activity, activityJSON);
             }
 
