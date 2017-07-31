@@ -13,9 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BuddyPreferenceService {
+public class BuddyPreferences {
 
-    public static final String TAG = "com.parse.BuddyPreferenceService";
+    public static final String TAG = "com.parse.BuddyPreferences";
 
     public static BuddyConfiguration getConfig(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(BuddyPreferenceKeys.preferenceBuddyLocationTracker, 0);

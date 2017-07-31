@@ -107,7 +107,7 @@ class BuddyUploadCriteria {
     }
 
     public synchronized int endUpload(Context context) {
-        BuddyPreferenceService.updateLastUploadedEpoch(context, System.currentTimeMillis());
+        BuddyPreferences.updateLastUploadedEpoch(context, System.currentTimeMillis());
         uploadJobsCount--;
 
         PLog.i(TAG, "endUpload - jobs = " + String.valueOf(uploadJobsCount));
