@@ -6,6 +6,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class BuddyRemoteConfiguration {
+    private final String deviceModel;
+    private final int apiLevel;
+    private final String applicationId;
     private BuddyRemoteConfigValidity apiLevelValidity = null;
     private BuddyRemoteConfigValidity modelValidity = null;
     private JSONObject config;
@@ -17,28 +20,53 @@ public class BuddyRemoteConfiguration {
 
     public BuddyRemoteConfiguration(JSONObject config, String deviceModel, int apiLevel, String applicationId) {
         this.config = config;
-        appIdValidity =  getValidity(BuddyPreferenceKeys.preferenceConfigAppId, applicationId);
-        apiLevelValidity =  getValidity(BuddyPreferenceKeys.preferenceConfigApiLevel, apiLevel);
-        modelValidity =  getValidity(BuddyPreferenceKeys.preferenceConfigModel, deviceModel);
+        this.deviceModel = deviceModel;
+        this.apiLevel = apiLevel;
+        this.applicationId = applicationId;
+
+        appIdValidity =  getValidity(BuddyPreferenceKeys.preferenceConfigAppId);
+        apiLevelValidity =  getValidity(BuddyPreferenceKeys.preferenceConfigApiLevel);
+        modelValidity =  getValidity(BuddyPreferenceKeys.preferenceConfigModel);
     }
 
     public boolean getApiLevelValidity() {
-        return apiLevelValidity == BuddyRemoteConfigValidity.Specific;
+        boolean result = false;
+        try {
+            result = apiLevelValidity == BuddyRemoteConfigValidity.Specific && Integer.toString(apiLevel).equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigApiLevel));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 
     public boolean getAppIdValidity() {
-        return appIdValidity == BuddyRemoteConfigValidity.Specific;
+        boolean result = false;
+        try {
+            result = appIdValidity == BuddyRemoteConfigValidity.Specific && applicationId.equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigAppId));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 
     public boolean getModelValidity() {
-        return modelValidity == BuddyRemoteConfigValidity.Specific;
+        boolean result = false;
+        try {
+            result = modelValidity == BuddyRemoteConfigValidity.Specific && deviceModel.equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigModel));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 
-    private BuddyRemoteConfigValidity getValidity(String preferenceConfig, Object value) {
+    private BuddyRemoteConfigValidity getValidity(String preferenceConfig) {
         BuddyRemoteConfigValidity validity = BuddyRemoteConfigValidity.Any;
 
         try {
-            if (this.config.getString(preferenceConfig).equalsIgnoreCase(value.toString())) {
+            if (!this.config.getString(preferenceConfig).equalsIgnoreCase("*")) {
                 validity = BuddyRemoteConfigValidity.Specific;
             }
         } catch (JSONException e) {
@@ -65,16 +93,57 @@ public class BuddyRemoteConfiguration {
 
     public boolean isAppIdAndApiLevelSet()
     {
-        return appIdValidity == BuddyRemoteConfigValidity.Specific && apiLevelValidity == BuddyRemoteConfigValidity.Specific;
+        boolean result = false;
+        try {
+            result = appIdValidity == BuddyRemoteConfigValidity.Specific && applicationId.equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigAppId))
+                    && apiLevelValidity == BuddyRemoteConfigValidity.Specific && Integer.toString(apiLevel).equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigApiLevel));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 
     public boolean isAppIdAndModelSet()
     {
-        return appIdValidity == BuddyRemoteConfigValidity.Specific && modelValidity == BuddyRemoteConfigValidity.Specific;
+        boolean result = false;
+        try {
+            result = appIdValidity == BuddyRemoteConfigValidity.Specific && applicationId.equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigAppId))
+                    && modelValidity == BuddyRemoteConfigValidity.Specific && deviceModel.equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigModel));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 
     public boolean isApiLevelAndModelSet()
     {
-        return apiLevelValidity == BuddyRemoteConfigValidity.Specific && modelValidity == BuddyRemoteConfigValidity.Specific;
+        boolean result = false;
+        try {
+            result = apiLevelValidity == BuddyRemoteConfigValidity.Specific && Integer.toString(apiLevel).equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigApiLevel))
+                    && modelValidity == BuddyRemoteConfigValidity.Specific && deviceModel.equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigModel));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    public boolean isAppIdAndApiLevelAndModelSet()
+    {
+        boolean result = false;
+        try {
+            String configAppId = config.getString(BuddyPreferenceKeys.preferenceConfigAppId);
+            String configApiLevel = config.getString(BuddyPreferenceKeys.preferenceConfigApiLevel);
+            String configModel = config.getString(BuddyPreferenceKeys.preferenceConfigModel);
+            result = appIdValidity == BuddyRemoteConfigValidity.Specific && applicationId.equalsIgnoreCase(configAppId)
+                    && apiLevelValidity == BuddyRemoteConfigValidity.Specific && Integer.toString(apiLevel).equalsIgnoreCase(configApiLevel)
+                    && modelValidity == BuddyRemoteConfigValidity.Specific && deviceModel.equalsIgnoreCase(configModel);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 }

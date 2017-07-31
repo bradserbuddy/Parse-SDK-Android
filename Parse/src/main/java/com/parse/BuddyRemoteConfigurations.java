@@ -28,7 +28,12 @@ public class BuddyRemoteConfigurations {
 
         // first check if we have any configs with all 3 set
         if (configs != null && configs.size() > 0) {
-            return configs.get(0).getConfiguration();
+            // find the one that matches this app id
+            for (BuddyRemoteConfiguration config : configs) {
+                if (config.isAppIdAndApiLevelAndModelSet() ) {
+                    return config.getConfiguration();
+                }
+            }
         }
 
         // secondly check if we have any configs with 2 set

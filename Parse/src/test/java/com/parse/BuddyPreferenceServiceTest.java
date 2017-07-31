@@ -72,7 +72,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigMaxRecordsToDelete, 0)).thenReturn(maxRecordsToDelete);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(maxRecordsToDelete, configuration.getCommonMaxRecordsToDelete());
@@ -84,7 +84,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigErrorMaxRecords, 0)).thenReturn(errorMaxRecords);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(errorMaxRecords, configuration.getCommonMaxErrorRecords());
@@ -96,7 +96,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigCellularMaxRecords, 0)).thenReturn(cellularMaxRecords);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(cellularMaxRecords, configuration.getCommonMaxCellularRecords());
@@ -108,7 +108,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigLocationMaxRecords, 0)).thenReturn(locationsMaxRecords);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(locationsMaxRecords, configuration.getCommonMaxLocationRecords());
@@ -120,7 +120,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getBoolean(BuddyPreferenceKeys.preferenceConfigUploadLocation, false)).thenReturn(shouldUploadLocation);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(shouldUploadLocation, configuration.shouldUploadLocation());
@@ -132,7 +132,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getBoolean(BuddyPreferenceKeys.preferenceConfigUploadCellular, true)).thenReturn(shouldUploadCellular);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(shouldUploadCellular, configuration.shouldUploadCellular());
@@ -144,7 +144,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getBoolean(BuddyPreferenceKeys.preferenceConfigLogLocation, false)).thenReturn(shouldLogLocation);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(shouldLogLocation, configuration.shouldLogLocation());
@@ -156,7 +156,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getBoolean(BuddyPreferenceKeys.preferenceConfigLogCellular, true)).thenReturn(shouldLogCellular);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(shouldLogCellular, configuration.shouldLogCellular());
@@ -168,7 +168,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigLocationFastestUpdateIntervalMs, 0)).thenReturn(locationFastestUpdateInterval);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(locationFastestUpdateInterval, configuration.getAndroidLocationFastestUpdateInterval());
@@ -180,7 +180,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigLocationUpdateIntervalMs, 0)).thenReturn(locationUpdateInterval);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(locationUpdateInterval, configuration.getAndroidLocationUpdateInterval());
@@ -192,7 +192,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigLocationPowerAccuracy, 0)).thenReturn(locationPowerAccuracy);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(locationPowerAccuracy, configuration.getAndroidLocationPowerAccuracy());
@@ -204,7 +204,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigCellularLogTimeoutMs, 0)).thenReturn(cellularLogTimeout);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(cellularLogTimeout, configuration.getCommonCellularLogTimeout());
@@ -216,7 +216,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigCellularPushBatch, 0)).thenReturn(cellularBatchSize);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(cellularBatchSize, configuration.getCommonCellularPushBatchSize());
@@ -228,7 +228,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigLocationPushBatch, 0)).thenReturn(locationsBatchSize);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(locationsBatchSize, configuration.getCommonLocationPushBatchSize());
@@ -240,7 +240,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigVersion, 0)).thenReturn(lastVersion);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(lastVersion, configuration.getVersion());
@@ -252,7 +252,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceLastUpdatedEpoch, 0)).thenReturn(epoch);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(epoch, configuration.getLastUploadedEpoch());
@@ -264,7 +264,7 @@ public class BuddyPreferenceServiceTest {
         when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigActivityMonitorInterval, 0)).thenReturn(androidActivityMonitoringInterval);
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.getConfig(context);
+        BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
         assertEquals(androidActivityMonitoringInterval, configuration.getAndroidActivityMonitoringInterval());
@@ -280,7 +280,7 @@ public class BuddyPreferenceServiceTest {
         setFinalStatic(Build.class.getField("MANUFACTURER"), "samsung");
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.update(context, config,appId1);
+        BuddyConfiguration configuration = BuddyPreferences.update(context, config,appId1);
 
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
@@ -349,7 +349,7 @@ public class BuddyPreferenceServiceTest {
         setFinalStatic(Build.class.getField("MANUFACTURER"), "samsung");
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.update(context, config, appId1);
+        BuddyConfiguration configuration = BuddyPreferences.update(context, config, appId1);
 
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
@@ -431,7 +431,7 @@ public class BuddyPreferenceServiceTest {
         setFinalStatic(Build.class.getField("MANUFACTURER"), "samsung");
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.update(context, config, appId1);
+        BuddyConfiguration configuration = BuddyPreferences.update(context, config, appId1);
 
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
@@ -526,7 +526,7 @@ public class BuddyPreferenceServiceTest {
         setFinalStatic(Build.class.getField("MANUFACTURER"), "samsung");
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.update(context, config, appId1);
+        BuddyConfiguration configuration = BuddyPreferences.update(context, config, appId1);
 
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
@@ -621,7 +621,7 @@ public class BuddyPreferenceServiceTest {
         setFinalStatic(Build.class.getField("MANUFACTURER"), "samsung");
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.update(context, config, appId1);
+        BuddyConfiguration configuration = BuddyPreferences.update(context, config, appId1);
 
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
@@ -716,7 +716,7 @@ public class BuddyPreferenceServiceTest {
         setFinalStatic(Build.class.getField("MANUFACTURER"), "samsung");
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.update(context, config, appId1);
+        BuddyConfiguration configuration = BuddyPreferences.update(context, config, appId1);
 
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
@@ -811,7 +811,7 @@ public class BuddyPreferenceServiceTest {
         setFinalStatic(Build.class.getField("MANUFACTURER"), "samsung");
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.update(context, config, appId1);
+        BuddyConfiguration configuration = BuddyPreferences.update(context, config, appId1);
 
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
@@ -919,7 +919,7 @@ public class BuddyPreferenceServiceTest {
         setFinalStatic(Build.class.getField("MANUFACTURER"), "samsung");
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.update(context, config, appId1);
+        BuddyConfiguration configuration = BuddyPreferences.update(context, config, appId1);
 
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
@@ -1040,7 +1040,7 @@ public class BuddyPreferenceServiceTest {
         setFinalStatic(Build.class.getField("MANUFACTURER"), "samsung");
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.update(context, config, appId1);
+        BuddyConfiguration configuration = BuddyPreferences.update(context, config, appId1);
 
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
@@ -1161,7 +1161,7 @@ public class BuddyPreferenceServiceTest {
         setFinalStatic(Build.class.getField("MANUFACTURER"), "samsung");
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.update(context, config, appId1);
+        BuddyConfiguration configuration = BuddyPreferences.update(context, config, appId1);
 
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
@@ -1282,7 +1282,7 @@ public class BuddyPreferenceServiceTest {
         setFinalStatic(Build.class.getField("MANUFACTURER"), "samsung");
 
         // act
-        BuddyConfiguration configuration = BuddyPreferenceService.update(context, config, appId1);
+        BuddyConfiguration configuration = BuddyPreferences.update(context, config, appId1);
 
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());

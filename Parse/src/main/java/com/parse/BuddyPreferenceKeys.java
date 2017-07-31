@@ -1,7 +1,7 @@
 package com.parse;
 
 public class BuddyPreferenceKeys {
-    public static final String preferenceBuddyLocationTracker = "BuddyPreferenceService 09977e39-d487-48fb-97f1-1c018ea5e095"; // UUID to prevent name collision
+    public static final String preferenceBuddyLocationTracker = "BuddyPreferences 09977e39-d487-48fb-97f1-1c018ea5e095"; // UUID to prevent name collision
     public static final String preferenceLastUpdatedEpoch = "lastUploadedEpoch";
     public static final String preferenceConfigVersion = "version";
     public static final String preferenceConfigLocationPushBatch = "location-push-batch";
