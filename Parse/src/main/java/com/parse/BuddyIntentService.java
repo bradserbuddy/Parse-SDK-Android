@@ -35,7 +35,7 @@ public class BuddyIntentService extends IntentService {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             handleDetectedActivity(result.getMostProbableActivity());
         }
-        else if (LocationResult.hasResult(intent)) {
+        else {
             Location location = getLocation(intent);
 
             if (location != null) {
