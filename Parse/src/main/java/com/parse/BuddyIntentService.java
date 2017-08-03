@@ -73,6 +73,9 @@ public class BuddyIntentService extends IntentService {
                 }
                 BuddySqliteHelper.getInstance().save(BuddySqliteTableType.Location,contentValues);
                 PLog.i(TAG, "saved location " + latitude + " , " + longitude + ", activity = " + activity);
+
+                // save battery
+                BuddyAltDataTracker.getInstance().saveBatteryInformation();
             } else {
                 if (intent != null && intent.getAction() != null &&
                         intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {

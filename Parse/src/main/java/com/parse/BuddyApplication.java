@@ -12,7 +12,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BuddyApplicationService {
+public class BuddyApplication {
 
     public static JSONObject getAppNames(Context context,  long version, BigInteger deviceId) {
         PackageManager pm = context.getPackageManager();

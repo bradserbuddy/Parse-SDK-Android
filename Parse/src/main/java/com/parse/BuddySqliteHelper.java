@@ -42,6 +42,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
             CreateLocationsTable(db);
             CreateCellularTable(db);
             CreateErrorTable(db);
+            CreateBatteryTable(db);
         }
         catch (Exception e) {
             PLog.e(TAG, e.getMessage());
@@ -53,6 +54,14 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
                         "(cast(strftime('%%s', 'now') as int)) , %s text )",
                 BuddySqliteErrorTableKeys.TableName, BuddySqliteErrorTableKeys.Uuid, BuddySqliteErrorTableKeys.Timestamp,
                 BuddySqliteErrorTableKeys.Message);
+        db.execSQL(query);
+    }
+
+    private void CreateBatteryTable(SQLiteDatabase db) {
+        String query = String.format("create table %s ( %s text primary key, %s integer(4) default " +
+                        "(cast(strftime('%%s', 'now') as int)) , %s int )",
+                BuddySqliteBatteryTableKeys.TableName, BuddySqliteBatteryTableKeys.Uuid, BuddySqliteBatteryTableKeys.Timestamp,
+                BuddySqliteBatteryTableKeys.Level);
         db.execSQL(query);
     }
 
@@ -292,6 +301,15 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
                 }
                 result.put(BuddySqliteLocationTableKeys.Activity, activityJSON);
             }
+            else if (tableType == BuddySqliteTableType.Battery) {
+                String uuid = cursor.getString(cursor.getColumnIndex(BuddySqliteBatteryTableKeys.Uuid));
+                result.put(BuddySqliteBatteryTableKeys.Uuid, uuid);
+                long timestamp = cursor.getLong(cursor.getColumnIndex(BuddySqliteBatteryTableKeys.Timestamp));
+                result.put(BuddySqliteBatteryTableKeys.Timestamp, timestamp);
+                int level = cursor.getInt(cursor.getColumnIndex(BuddySqliteBatteryTableKeys.Level));
+                result.put("percentage", level);
+            }
+
 
         } catch (Exception e) {
             PLog.e(TAG, e.getMessage());

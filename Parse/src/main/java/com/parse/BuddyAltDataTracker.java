@@ -1,9 +1,7 @@
 package com.parse;
 
-import android.app.ActivityManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -15,7 +13,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.telephony.TelephonyManager;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -30,10 +27,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import okhttp3.Call;
@@ -86,7 +81,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     }
 
     private void uploadApplicationsList() {
-        JSONObject applicationsObject =  BuddyApplicationService.getAppNames(context,configuration.get().getVersion(), getDeviceId());
+        JSONObject applicationsObject =  BuddyApplication.getAppNames(context,configuration.get().getVersion(), getDeviceId());
         if (applicationsObject != null && applicationsObject.has("apps")) {
             BuddyMetaData.uploadMetaDataInBackground("apps", applicationsObject, new SaveCallback() {
                 @Override
@@ -116,63 +111,15 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         networkInfoLogTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                //PLog.i(TAG, "log cellular info");
                 saveCellularInformation();
+                saveBatteryInformation();
             }
         }, 0, configuration.get().getCommonCellularLogTimeout());
         PLog.i(TAG, "log cellular info timer enabled");
     }
 
-    private void saveCellularInformation() {
-        if (!isInBackground()) {
-            TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-            if (telephonyManager == null) {
-                BuddySqliteHelper.getInstance().logError(TAG, "TelephonyManager is null");
-            }
-            else {
-                try {
-                    JSONObject cellularInfoObject = BuddyCellularService.getCellInformation(telephonyManager);
-
-                    try {
-                        String body = cellularInfoObject.toString(0);
-                        ContentValues contentValues = new ContentValues();
-                        contentValues.put(BuddySqliteCellularTableKeys.Uuid, UUID.randomUUID().toString());
-                        contentValues.put(BuddySqliteCellularTableKeys.Body, body);
-
-                        BuddySqliteHelper.getInstance().save(BuddySqliteTableType.Cellular, contentValues);
-                        PLog.i(TAG, "cellular data saved");
-                    } catch (Exception e) {
-                        BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-                    }
-                }
-                catch (Exception e) {
-                    BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-                }
-            }
-        }
-    }
-
-    private static boolean isInBackground() {
-        boolean isBackground = false;
-        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningAppProcessInfo> processList = activityManager.getRunningAppProcesses();
-        if (processList == null) {
-            // can't find the app, so it is background because we don't want to log cell info.
-            isBackground = true;
-        }
-        else
-        {
-            for (ActivityManager.RunningAppProcessInfo process : processList)
-            {
-                if (process.processName.startsWith(Parse.getApplicationContext().getPackageName()))
-                {
-                    isBackground = process.importance != ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND && process.importance != ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
-                    break;
-                }
-            }
-        }
-
-        return isBackground;
+    public void saveCellularInformation() {
+        BuddyCellularInformation.save(context);
     }
 
     private void uploadDeviceInformation() {
@@ -454,6 +401,58 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         }
     }
 
+    private void uploadBattery(final int loopCount) {
+        PLog.i(TAG, "Uploading battery batch no. " + Integer.toString(loopCount));
+        final JSONObject batteryInfoItems = BuddySqliteHelper.getInstance().get(BuddySqliteTableType.Battery,
+                configuration.get().getCommonBatteryPushBatchSize());
+
+        if (batteryInfoItems.has("items") && batteryInfoItems.has("ids")) {
+            try {
+                final JSONArray items = (JSONArray) batteryInfoItems.get("items");
+                final String[] ids = (String[]) batteryInfoItems.get("ids");
+
+                JSONObject parametersObject = new JSONObject();
+                BigInteger deviceId = getDeviceId();
+                parametersObject.put("deviceId", deviceId);
+                parametersObject.put("battery", items);
+                parametersObject.put("version", configuration.get().getVersion());
+
+                BuddyMetaData.uploadMetaDataInBackground("battery", parametersObject, new SaveCallback() {
+                    @Override
+                    public void done(ParseException e) {
+                        if (e == null) {
+                            // success
+                            PLog.i(TAG, "battery info uploaded");
+                            PLog.i(TAG, "deleting uploaded battery info");
+                            long rowsAffected = BuddySqliteHelper.getInstance().delete(BuddySqliteTableType.Battery, ids);
+
+                            if (items.length() == rowsAffected) {
+                                PLog.i(TAG, "battery info deleted");
+                            }
+
+                            if (loopCount -  1 != 0) {
+                                uploadBattery(loopCount -  1);
+                            }
+                            else {
+                                // all cellular info uploaded.
+                                uploadCompleted();
+                            }
+
+                        } else {
+                            PLog.i(TAG, "battery upload failed");
+                            uploadCompleted();
+                            handleUploadError(e);
+                        }
+                    }
+                });
+
+            }
+            catch(Exception e) {
+                BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+            }
+        }
+    }
+
     private void handleUploadError(ParseException e) {
         if (e.getCode() == ParseException.VALIDATION_ERROR) {
             LoadNewConfiguration();
@@ -529,7 +528,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                         break;
                 }
 
-                upload();
+                handleEvent();
             }
         };
 
@@ -543,37 +542,73 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
         context.registerReceiver(actionReceiver, intentFilter);
     }
+    private void handleEvent() {
+        if (uploadCriteria.getHasEnoughBattery(context)) {
+            saveCellularInformation();
+        }
+        saveBatteryInformation();
+
+        upload();
+    }
+
+    public void saveBatteryInformation() {
+        int batteryPercentage = uploadCriteria.getBatteryPercentage(context);
+        BuddyBatteryInformation.saveBatteryInformation(batteryPercentage);
+    }
 
     private void upload() {
         if (uploadCriteria.canUpload(context, configuration.get())) {
-            long availableLocations = BuddySqliteHelper.getInstance().rowCount(BuddySqliteTableType.Location);
-            if (configuration.get().shouldUploadLocation()) {
-                uploadCriteria.startUpload();
-
-                int loopCount = (int) Math.ceil((double)availableLocations / configuration.get().getCommonLocationPushBatchSize());
-                if (loopCount == 0) {
-                    // make the push with empty locations
-                    loopCount = 1;
-                }
-                uploadLocations(loopCount);
-            }
-
-            // upload cellular information
-            long availableCellularInfo = BuddySqliteHelper.getInstance().rowCount(BuddySqliteTableType.Cellular);
-            if (configuration.get().shouldUploadCellular()) {
-                uploadCriteria.startUpload();
-
-                int loopCount = (int) Math.ceil((double)availableCellularInfo / configuration.get().getCommonCellularPushBatchSize());
-                if (loopCount == 0) {
-                    // make the push with empty cellular data
-                    loopCount = 1;
-                }
-                uploadCellular(loopCount);
-            }
+            uploadLocations();
+            uploadCellular();
+            uploadBattery();
         }
         else {
             // not ready to upload.
             BuddySqliteHelper.getInstance().cleanUp(configuration.get());
+        }
+    }
+
+    private void uploadBattery() {
+        // upload battery information
+        long availableBatteryInfo = BuddySqliteHelper.getInstance().rowCount(BuddySqliteTableType.Battery);
+        if (configuration.get().shouldUploadBattery()) {
+            uploadCriteria.startUpload();
+
+            int loopCount = (int) Math.ceil((double)availableBatteryInfo / configuration.get().getCommonBatteryPushBatchSize());
+            if (loopCount == 0) {
+                // make the push with empty battery data, so updated config gets downloaded
+                loopCount = 1;
+            }
+            uploadBattery(loopCount);
+        }
+    }
+
+    private void uploadCellular() {
+        // upload cellular information
+        long availableCellularInfo = BuddySqliteHelper.getInstance().rowCount(BuddySqliteTableType.Cellular);
+        if (configuration.get().shouldUploadCellular()) {
+            uploadCriteria.startUpload();
+
+            int loopCount = (int) Math.ceil((double)availableCellularInfo / configuration.get().getCommonCellularPushBatchSize());
+            if (loopCount == 0) {
+                // make the push with empty cellular data, so updated config gets downloaded
+                loopCount = 1;
+            }
+            uploadCellular(loopCount);
+        }
+    }
+
+    private void uploadLocations() {
+        long availableLocations = BuddySqliteHelper.getInstance().rowCount(BuddySqliteTableType.Location);
+        if (configuration.get().shouldUploadLocation()) {
+            uploadCriteria.startUpload();
+
+            int loopCount = (int) Math.ceil((double)availableLocations / configuration.get().getCommonLocationPushBatchSize());
+            if (loopCount == 0) {
+                // make the push with empty locations, so updated config gets downloaded
+                loopCount = 1;
+            }
+            uploadLocations(loopCount);
         }
     }
 

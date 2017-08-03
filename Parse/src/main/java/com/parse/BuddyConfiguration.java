@@ -8,16 +8,20 @@ public class BuddyConfiguration {
     private long commonMaxLocationRecords;
     private long commonMaxCellularRecords;
     private long commonMaxErrorRecords;
+    private long commonMaxBatteryRecords;
     private long commonMaxRecordsToDelete;
     private long androidLocationPowerAccuracy;
     private long androidLocationFastestUpdateInterval;
     private long androidLocationUpdateInterval;
     private boolean androidLogCellular;
     private boolean androidLogLocation;
+    private boolean androidLogBattery;
     private boolean androidUploadCellular;
     private boolean androidUploadLocation;
+    private boolean androidUploadBattery;
     private long lastUploadedEpoch;
     private long androidActivityMonitoringInterval;
+    private long commonBatteryPushBatchSize;
 
     public long getCommonCellularPushBatchSize() {
         return commonCellularPushBatchSize;
@@ -153,5 +157,37 @@ public class BuddyConfiguration {
 
     public void setAndroidActivityMonitoringInterval(long androidActivityMonitoringInterval) {
         this.androidActivityMonitoringInterval = androidActivityMonitoringInterval;
+    }
+
+    public long getCommonBatteryPushBatchSize() {
+        return commonBatteryPushBatchSize;
+    }
+
+    public void setCommonBatteryPushBatchSize(long commonBatteryPushBatchSize) {
+        this.commonBatteryPushBatchSize = commonBatteryPushBatchSize;
+    }
+
+    public long getCommonMaxBatteryRecords() {
+        return commonMaxBatteryRecords;
+    }
+
+    public void setCommonMaxBatteryRecords(long commonMaxBatteryRecords) {
+        this.commonMaxBatteryRecords = commonMaxBatteryRecords;
+    }
+
+    public boolean shouldLogBattery() {
+        return androidLogBattery;
+    }
+
+    public void setLogBattery(boolean androidLogBattery) {
+        this.androidLogBattery = androidLogBattery;
+    }
+
+    public boolean shouldUploadBattery() {
+        return androidUploadBattery;
+    }
+
+    public void setUploadBattery(boolean androidUploadBattery) {
+        this.androidUploadBattery = androidUploadBattery;
     }
 }
