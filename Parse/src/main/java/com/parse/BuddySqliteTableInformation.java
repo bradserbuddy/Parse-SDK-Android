@@ -12,6 +12,9 @@ public class BuddySqliteTableInformation {
         else if (tableType == BuddySqliteTableType.Error) {
             table = BuddySqliteErrorTableKeys.TableName;
         }
+        else if (tableType == BuddySqliteTableType.Battery) {
+            table = BuddySqliteBatteryTableKeys.TableName;
+        }
 
         return table;
     }

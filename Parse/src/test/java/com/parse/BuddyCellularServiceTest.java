@@ -1,7 +1,5 @@
 package com.parse;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.telephony.CellIdentityCdma;
 import android.telephony.CellIdentityGsm;
@@ -9,9 +7,7 @@ import android.telephony.CellIdentityWcdma;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
-import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
-import android.telephony.CellLocation;
 import android.telephony.CellSignalStrengthCdma;
 import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthWcdma;
@@ -36,11 +32,8 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.parse.BuddyCellularService.getCellInformation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -99,7 +92,7 @@ public class BuddyCellularServiceTest {
         when(cellIdentityGsm.getArfcn()).thenReturn(arfcn);
 
         // act
-        JSONObject gsmCellInfo = BuddyCellularService.getCellInformation(telephonyManager);
+        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(telephonyManager);
 
         // assert
         assertEquals(dataNetworkType, gsmCellInfo.get("DataNetworkType"));
@@ -154,7 +147,7 @@ public class BuddyCellularServiceTest {
         when(cellIdentityCdma.getSystemId()).thenReturn(systemId);
 
         // act
-        JSONObject gsmCellInfo = BuddyCellularService.getCellInformation(telephonyManager);
+        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(telephonyManager);
 
         // assert
         assertEquals(dataNetworkType, gsmCellInfo.get("DataNetworkType"));
@@ -210,7 +203,7 @@ public class BuddyCellularServiceTest {
         when(cellSignalStrengthWcdma.getDbm()).thenReturn(dbm);
 
         // act
-        JSONObject gsmCellInfo = BuddyCellularService.getCellInformation(telephonyManager);
+        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(telephonyManager);
 
         // assert
         assertEquals(dataNetworkType, gsmCellInfo.get("DataNetworkType"));
@@ -251,7 +244,7 @@ public class BuddyCellularServiceTest {
         when(cdmaCellLocation.getSystemId()).thenReturn(systemId);
 
         // act
-        JSONObject gsmCellInfo = BuddyCellularService.getCellInformation(telephonyManager);
+        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(telephonyManager);
 
         // assert
         JSONArray data = (JSONArray)gsmCellInfo.get("data");
@@ -281,7 +274,7 @@ public class BuddyCellularServiceTest {
         when(gsmCellLocation.getPsc()).thenReturn(psc);
 
         // act
-        JSONObject gsmCellInfo = BuddyCellularService.getCellInformation(telephonyManager);
+        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(telephonyManager);
 
         // assert
         JSONArray data = (JSONArray)gsmCellInfo.get("data");

@@ -3,12 +3,6 @@ package com.parse;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
-import android.telephony.CellIdentityGsm;
-import android.telephony.CellInfo;
-import android.telephony.CellInfoGsm;
-import android.telephony.CellSignalStrengthGsm;
-import android.telephony.TelephonyManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -26,10 +20,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.R.attr.level;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
@@ -70,7 +62,7 @@ public class BuddyApplicationServiceTest {
 
         // act
 
-        JSONObject gsmCellInfo = BuddyApplicationService.getAppNames(context, version, deviceId);
+        JSONObject gsmCellInfo = BuddyApplication.getAppNames(context, version, deviceId);
 
         // assert
         JSONArray apps = (JSONArray)gsmCellInfo.get("apps");

@@ -1,5 +1,7 @@
 package com.parse;
 
+import android.content.ContentValues;
+import android.content.Context;
 import android.os.Build;
 import android.telephony.CellIdentityCdma;
 import android.telephony.CellIdentityGsm;
@@ -23,8 +25,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.UUID;
 
-public class BuddyCellularService {
+public class BuddyCellularInformation {
+    private static final String TAG = "com.parse.BuddyCellularInformation";
 
     public static JSONObject getCellInformation(TelephonyManager telephonyManager) {
 
@@ -165,6 +169,35 @@ public class BuddyCellularService {
         }
 
         return cellInformation;
+    }
+
+    public static void save(Context context) {
+        if (!BuddyApplicationState.isInBackground(context)) {
+            TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            if (telephonyManager == null) {
+                BuddySqliteHelper.getInstance().logError(TAG, "TelephonyManager is null");
+            }
+            else {
+                try {
+                    JSONObject cellularInfoObject = BuddyCellularInformation.getCellInformation(telephonyManager);
+
+                    try {
+                        String body = cellularInfoObject.toString(0);
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put(BuddySqliteCellularTableKeys.Uuid, UUID.randomUUID().toString());
+                        contentValues.put(BuddySqliteCellularTableKeys.Body, body);
+
+                        BuddySqliteHelper.getInstance().save(BuddySqliteTableType.Cellular, contentValues);
+                        PLog.i(TAG, "cellular data saved");
+                    } catch (Exception e) {
+                        BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                    }
+                }
+                catch (Exception e) {
+                    BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                }
+            }
+        }
     }
 
 }
