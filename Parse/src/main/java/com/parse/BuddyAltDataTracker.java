@@ -552,8 +552,10 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     }
 
     public void saveBatteryInformation() {
-        int batteryPercentage = uploadCriteria.getBatteryPercentage(context);
-        BuddyBatteryInformation.saveBatteryInformation(batteryPercentage);
+        if (configuration.get().shouldLogBattery()) {
+            int batteryPercentage = uploadCriteria.getBatteryPercentage(context);
+            BuddyBatteryInformation.saveBatteryInformation(batteryPercentage);
+        }
     }
 
     private void upload() {
@@ -569,9 +571,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     }
 
     private void uploadBattery() {
-        // upload battery information
-        long availableBatteryInfo = BuddySqliteHelper.getInstance().rowCount(BuddySqliteTableType.Battery);
         if (configuration.get().shouldUploadBattery()) {
+            long availableBatteryInfo = BuddySqliteHelper.getInstance().rowCount(BuddySqliteTableType.Battery);
             uploadCriteria.startUpload();
 
             int loopCount = (int) Math.ceil((double)availableBatteryInfo / configuration.get().getCommonBatteryPushBatchSize());
@@ -584,9 +585,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     }
 
     private void uploadCellular() {
-        // upload cellular information
-        long availableCellularInfo = BuddySqliteHelper.getInstance().rowCount(BuddySqliteTableType.Cellular);
         if (configuration.get().shouldUploadCellular()) {
+            long availableCellularInfo = BuddySqliteHelper.getInstance().rowCount(BuddySqliteTableType.Cellular);
             uploadCriteria.startUpload();
 
             int loopCount = (int) Math.ceil((double)availableCellularInfo / configuration.get().getCommonCellularPushBatchSize());
@@ -599,8 +599,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     }
 
     private void uploadLocations() {
-        long availableLocations = BuddySqliteHelper.getInstance().rowCount(BuddySqliteTableType.Location);
         if (configuration.get().shouldUploadLocation()) {
+            long availableLocations = BuddySqliteHelper.getInstance().rowCount(BuddySqliteTableType.Location);
             uploadCriteria.startUpload();
 
             int loopCount = (int) Math.ceil((double)availableLocations / configuration.get().getCommonLocationPushBatchSize());
