@@ -52,7 +52,7 @@ public class BuddyPreferences {
         configuration.setCommonCellularPushBatchSize(cellularBatchSize == 0 ? cellularBatchSizeDefault : cellularBatchSize);
 
         long cellularLogTimeout = sharedPreferences.getLong(BuddyPreferenceKeys.preferenceConfigCellularLogTimeoutMs, 0);
-        configuration.setCommonCellularLogTimeout(cellularLogTimeout == 0 ? cellularLogTimeoutDefault : cellularLogTimeout);
+        configuration.setAndroidCellularLogTimeout(cellularLogTimeout == 0 ? cellularLogTimeoutDefault : cellularLogTimeout);
 
         long locationPowerAccuracy = sharedPreferences.getLong(BuddyPreferenceKeys.preferenceConfigLocationPowerAccuracy, 0);
         configuration.setAndroidLocationPowerAccuracy(locationPowerAccuracy == 0 ? locationPowerAccuracyDefault : locationPowerAccuracy);
@@ -156,7 +156,6 @@ public class BuddyPreferences {
                 long locationPushBatch = getValueWithDefault(commonConfigItems, BuddyPreferenceKeys.preferenceConfigLocationPushBatch, locationsBatchSizeDefault);
                 long cellularPushBatch = getValueWithDefault(commonConfigItems, BuddyPreferenceKeys.preferenceConfigCellularPushBatch, cellularBatchSizeDefault);
                 long batteryPushBatch = getValueWithDefault(commonConfigItems, BuddyPreferenceKeys.preferenceConfigBatteryPushBatch, batteryBatchSizeDefault);
-                long cellularLogTimeout = getValueWithDefault(commonConfigItems, BuddyPreferenceKeys.preferenceConfigCellularLogTimeoutMs, cellularLogTimeoutDefault);
                 long locationsMaxRecords = getValueWithDefault(commonConfigItems, BuddyPreferenceKeys.preferenceConfigLocationMaxRecords, locationsMaxRecordsDefault);
                 long cellularMaxRecords = getValueWithDefault(commonConfigItems, BuddyPreferenceKeys.preferenceConfigCellularMaxRecords, cellularMaxRecordsDefault);
                 long errorMaxRecords = getValueWithDefault(commonConfigItems, BuddyPreferenceKeys.preferenceConfigErrorMaxRecords, errorMaxRecordsDefault);
@@ -186,6 +185,7 @@ public class BuddyPreferences {
                     boolean shouldUploadLocation = getValueWithDefault(usedConfig,BuddyPreferenceKeys.preferenceConfigUploadLocation, shouldUploadLocationDefault);
                     boolean shouldUploadBattery = getValueWithDefault(usedConfig,BuddyPreferenceKeys.preferenceConfigUploadBattery, shouldUploadBatteryDefault);
                     long activityMonitoringInterval = getValueWithDefault(usedConfig, BuddyPreferenceKeys.preferenceConfigActivityMonitorInterval, activityMonitoringIntervalDefault);
+                    long cellularLogTimeout = getValueWithDefault(usedConfig, BuddyPreferenceKeys.preferenceConfigCellularLogTimeoutMs, cellularLogTimeoutDefault);
 
                     SharedPreferences sharedPreferences = context.getSharedPreferences(BuddyPreferenceKeys.preferenceBuddyLocationTracker, 0);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -215,7 +215,7 @@ public class BuddyPreferences {
                     savedConfig.setCommonLocationPushBatchSize(locationPushBatch);
                     savedConfig.setCommonCellularPushBatchSize(cellularPushBatch);
                     savedConfig.setCommonBatteryPushBatchSize(batteryPushBatch);
-                    savedConfig.setCommonCellularLogTimeout(cellularLogTimeout);
+                    savedConfig.setAndroidCellularLogTimeout(cellularLogTimeout);
                     savedConfig.setCommonMaxLocationRecords(locationsMaxRecords);
                     savedConfig.setCommonMaxCellularRecords(cellularMaxRecords);
                     savedConfig.setCommonMaxBatteryRecords(batteryMaxRecords);
