@@ -1,22 +1,15 @@
 package com.parse;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = TestHelper.ROBOLECTRIC_SDK_VERSION)
@@ -210,10 +203,10 @@ public class BuddyConfigurationTest {
         long commonCellularLogTimeout = 12;
 
         // act
-        configuration.setCommonCellularLogTimeout(commonCellularLogTimeout);
+        configuration.setAndroidCellularLogTimeout(commonCellularLogTimeout);
 
         // assert
-        assertEquals(commonCellularLogTimeout, configuration.getCommonCellularLogTimeout());
+        assertEquals(commonCellularLogTimeout, configuration.getAndroidCellularLogTimeout());
     }
 
     @Test

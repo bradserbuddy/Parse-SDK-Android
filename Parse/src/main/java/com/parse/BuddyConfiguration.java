@@ -3,7 +3,6 @@ package com.parse;
 public class BuddyConfiguration {
     private long version;
     private long commonLocationPushBatchSize;
-    private long commonCellularLogTimeout;
     private long commonCellularPushBatchSize;
     private long commonMaxLocationRecords;
     private long commonMaxCellularRecords;
@@ -19,6 +18,7 @@ public class BuddyConfiguration {
     private boolean androidUploadCellular;
     private boolean androidUploadLocation;
     private boolean androidUploadBattery;
+    private long androidCellularLogTimeout;
     private long lastUploadedEpoch;
     private long androidActivityMonitoringInterval;
     private long commonBatteryPushBatchSize;
@@ -31,12 +31,12 @@ public class BuddyConfiguration {
         this.commonCellularPushBatchSize = commonCellularPushBatchSize;
     }
 
-    public long getCommonCellularLogTimeout() {
-        return commonCellularLogTimeout;
+    public long getAndroidCellularLogTimeout() {
+        return androidCellularLogTimeout;
     }
 
-    public void setCommonCellularLogTimeout(long commonCellularLogTimeout) {
-        this.commonCellularLogTimeout = commonCellularLogTimeout;
+    public void setAndroidCellularLogTimeout(long androidCellularLogTimeout) {
+        this.androidCellularLogTimeout = androidCellularLogTimeout;
     }
 
     public long getVersion() {

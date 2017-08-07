@@ -220,7 +220,7 @@ public class BuddyPreferenceTest {
         BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
-        assertEquals(cellularLogTimeout, configuration.getCommonCellularLogTimeout());
+        assertEquals(cellularLogTimeout, configuration.getAndroidCellularLogTimeout());
     }
 
     @Test
@@ -310,7 +310,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getCommonCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeout());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -339,7 +339,6 @@ public class BuddyPreferenceTest {
                     "      \"location-push-batch\": 100,\n" +
                     "      \"cellular-push-batch\": 101,\n" +
                     "      \"battery-push-batch\": 121, \n" +
-                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "      \"max-location-records\": 103,\n" +
                     "      \"max-cellular-records\": 104,\n" +
                     "      \"max-error-records\": 105,\n" +
@@ -355,6 +354,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 107,\n" +
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -387,7 +387,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getCommonCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeout());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -416,7 +416,6 @@ public class BuddyPreferenceTest {
                     "      \"location-push-batch\": 100,\n" +
                     "      \"cellular-push-batch\": 101,\n" +
                     "      \"battery-push-batch\": 121, \n" +
-                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "      \"max-location-records\": 103,\n" +
                     "      \"max-cellular-records\": 104,\n" +
                     "      \"max-error-records\": 105,\n" +
@@ -432,6 +431,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 107,\n" +
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -447,6 +447,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 111,\n" +
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
@@ -479,7 +480,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getCommonCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeout());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -508,7 +509,6 @@ public class BuddyPreferenceTest {
                     "      \"location-push-batch\": 100,\n" +
                     "      \"cellular-push-batch\": 101,\n" +
                     "      \"battery-push-batch\": 121, \n" +
-                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "      \"max-location-records\": 103,\n" +
                     "      \"max-cellular-records\": 104,\n" +
                     "      \"max-error-records\": 105,\n" +
@@ -524,6 +524,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 107,\n" +
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": false,\n" +
@@ -539,6 +540,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 111,\n" +
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
@@ -554,6 +556,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 115,\n" +
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -586,7 +589,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getCommonCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeout());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -615,7 +618,6 @@ public class BuddyPreferenceTest {
                     "      \"location-push-batch\": 100,\n" +
                     "      \"cellular-push-batch\": 101,\n" +
                     "      \"battery-push-batch\": 121, \n" +
-                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "      \"max-location-records\": 103,\n" +
                     "      \"max-cellular-records\": 104,\n" +
                     "      \"max-error-records\": 105,\n" +
@@ -631,6 +633,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 107,\n" +
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -646,6 +649,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 111,\n" +
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -661,6 +665,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 115,\n" +
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
@@ -693,7 +698,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getCommonCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeout());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -722,7 +727,6 @@ public class BuddyPreferenceTest {
                     "      \"location-push-batch\": 100,\n" +
                     "      \"cellular-push-batch\": 101,\n" +
                     "      \"battery-push-batch\": 121, \n" +
-                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "      \"max-location-records\": 103,\n" +
                     "      \"max-cellular-records\": 104,\n" +
                     "      \"max-error-records\": 105,\n" +
@@ -738,6 +742,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 107,\n" +
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -753,6 +758,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 111,\n" +
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
@@ -768,6 +774,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 115,\n" +
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
@@ -800,7 +807,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getCommonCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeout());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -831,7 +838,6 @@ public class BuddyPreferenceTest {
                     "      \"location-push-batch\": 100,\n" +
                     "      \"cellular-push-batch\": 101,\n" +
                     "      \"battery-push-batch\": 121, \n" +
-                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "      \"max-location-records\": 103,\n" +
                     "      \"max-cellular-records\": 104,\n" +
                     "      \"max-error-records\": 105,\n" +
@@ -847,6 +853,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 107,\n" +
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -862,6 +869,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 111,\n" +
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
@@ -877,6 +885,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 115,\n" +
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -909,7 +918,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getCommonCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeout());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -938,7 +947,6 @@ public class BuddyPreferenceTest {
                     "      \"location-push-batch\": 100,\n" +
                     "      \"cellular-push-batch\": 101,\n" +
                     "      \"battery-push-batch\": 121, \n" +
-                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "      \"max-location-records\": 103,\n" +
                     "      \"max-cellular-records\": 104,\n" +
                     "      \"max-error-records\": 105,\n" +
@@ -954,6 +962,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 107,\n" +
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": false,\n" +
@@ -969,6 +978,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 111,\n" +
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -984,6 +994,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 115,\n" +
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
@@ -999,6 +1010,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 119,\n" +
                     "            \"location-fastest-update-interval-ms\": 120,\n" +
                     "            \"location-update-interval-ms\": 121,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1031,7 +1043,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getCommonCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeout());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -1060,7 +1072,6 @@ public class BuddyPreferenceTest {
                     "      \"location-push-batch\": 100,\n" +
                     "      \"cellular-push-batch\": 101,\n" +
                     "      \"battery-push-batch\": 121, \n" +
-                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "      \"max-location-records\": 103,\n" +
                     "      \"max-cellular-records\": 104,\n" +
                     "      \"max-error-records\": 105,\n" +
@@ -1076,6 +1087,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 107,\n" +
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1091,6 +1103,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 111,\n" +
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1105,6 +1118,7 @@ public class BuddyPreferenceTest {
                     "            \"app-id\": \"*\",\n" +
                     "            \"location-power-accuracy\": 115,\n" +
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
@@ -1121,6 +1135,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 119,\n" +
                     "            \"location-fastest-update-interval-ms\": 120,\n" +
                     "            \"location-update-interval-ms\": 121,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
@@ -1136,6 +1151,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 123,\n" +
                     "            \"location-fastest-update-interval-ms\": 124,\n" +
                     "            \"location-update-interval-ms\": 125,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1168,7 +1184,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getCommonCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeout());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -1197,7 +1213,6 @@ public class BuddyPreferenceTest {
                     "      \"location-push-batch\": 100,\n" +
                     "      \"cellular-push-batch\": 101,\n" +
                     "      \"battery-push-batch\": 121, \n" +
-                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "      \"max-location-records\": 103,\n" +
                     "      \"max-cellular-records\": 104,\n" +
                     "      \"max-error-records\": 105,\n" +
@@ -1213,6 +1228,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 107,\n" +
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1228,6 +1244,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 111,\n" +
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1243,6 +1260,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 115,\n" +
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1258,6 +1276,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 119,\n" +
                     "            \"location-fastest-update-interval-ms\": 120,\n" +
                     "            \"location-update-interval-ms\": 121,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
@@ -1273,6 +1292,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 123,\n" +
                     "            \"location-fastest-update-interval-ms\": 124,\n" +
                     "            \"location-update-interval-ms\": 125,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1305,7 +1325,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getCommonCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeout());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -1334,7 +1354,6 @@ public class BuddyPreferenceTest {
                     "      \"location-push-batch\": 100,\n" +
                     "      \"cellular-push-batch\": 101,\n" +
                     "      \"battery-push-batch\": 121, \n" +
-                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "      \"max-location-records\": 103,\n" +
                     "      \"max-cellular-records\": 104,\n" +
                     "      \"max-error-records\": 105,\n" +
@@ -1350,6 +1369,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 107,\n" +
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1365,6 +1385,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 111,\n" +
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1380,6 +1401,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 115,\n" +
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
@@ -1395,6 +1417,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 119,\n" +
                     "            \"location-fastest-update-interval-ms\": 120,\n" +
                     "            \"location-update-interval-ms\": 121,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1410,6 +1433,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 123,\n" +
                     "            \"location-fastest-update-interval-ms\": 124,\n" +
                     "            \"location-update-interval-ms\": 125,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1442,7 +1466,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getCommonCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeout());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -1471,7 +1495,6 @@ public class BuddyPreferenceTest {
                     "      \"location-push-batch\": 100,\n" +
                     "      \"cellular-push-batch\": 101,\n" +
                     "      \"battery-push-batch\": 121, \n" +
-                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "      \"max-location-records\": 103,\n" +
                     "      \"max-cellular-records\": 104,\n" +
                     "      \"max-error-records\": 105,\n" +
@@ -1487,6 +1510,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 107,\n" +
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1502,6 +1526,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 111,\n" +
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1517,6 +1542,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 115,\n" +
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1532,6 +1558,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 119,\n" +
                     "            \"location-fastest-update-interval-ms\": 120,\n" +
                     "            \"location-update-interval-ms\": 121,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
@@ -1547,6 +1574,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 119,\n" +
                     "            \"location-fastest-update-interval-ms\": 120,\n" +
                     "            \"location-update-interval-ms\": 121,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
@@ -1562,6 +1590,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 123,\n" +
                     "            \"location-fastest-update-interval-ms\": 124,\n" +
                     "            \"location-update-interval-ms\": 125,\n" +
+                    "      \"cellular-log-timeout-ms\": 102,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
