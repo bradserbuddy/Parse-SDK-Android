@@ -23,7 +23,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
     public static final String TAG = "com.parse.BuddySqliteHelper";
     private static final String DATABASE_NAME = "Buddy.db";
     private static SQLiteDatabase db;
-    private static final int dbVersion = 1; // bump up on every release
+    private static final int dbVersion = 7; // bump up on every release
 
     public static synchronized BuddySqliteHelper getInstance() {
         if (Instance == null) {
