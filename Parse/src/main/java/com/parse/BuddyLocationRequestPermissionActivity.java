@@ -4,18 +4,15 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-//import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
-import android.support.design.widget.CoordinatorLayout;
 
 
-public class BuddyLocationRequestPermissionActivity extends AppCompatActivity
+public class BuddyLocationRequestPermissionActivity extends FragmentActivity
         implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    private static final int PERMISSION_REQUEST_LOCATION = 0;
-
-    private CoordinatorLayout coordinatorLayout;
+    private static final int PERMISSION_REQUEST_CODE = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,32 +20,21 @@ public class BuddyLocationRequestPermissionActivity extends AppCompatActivity
 
         PLog.i(BuddyAltDataTracker.TAG, "BuddyLocationRequestPermissionActivity start");
 
-        setContentView(R.layout.buddy_location_request_permission_layout);
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) || ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.READ_PHONE_STATE)) {
 
-        coordinatorLayout = (CoordinatorLayout) findViewById(R.id.blrpa);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            startService();
+            // the app has requested this permission previously and the user denied the request.
+            PLog.i(BuddyAltDataTracker.TAG, "BuddyLocationRequestPermissionActivity shouldShowRequestPermissionRationale true");
 
         } else {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION)) {
 
-                // the app has requested this permission previously and the user denied the request.
+            // the app has yet to prompt
+            PLog.i(BuddyAltDataTracker.TAG, "BuddyLocationRequestPermissionActivity shouldShowRequestPermissionRationale false");
 
-                ActivityCompat.requestPermissions(
-                        this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        PERMISSION_REQUEST_LOCATION);
-
-            } else {
-
-                // the app has yet to prompt
-
-                ActivityCompat.requestPermissions(
-                        this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        PERMISSION_REQUEST_LOCATION);
-            }
+            ActivityCompat.requestPermissions(
+                    this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE},
+                    PERMISSION_REQUEST_CODE);
         }
     }
 
@@ -61,10 +47,18 @@ public class BuddyLocationRequestPermissionActivity extends AppCompatActivity
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST_LOCATION) {
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startService();
+        PLog.i(BuddyAltDataTracker.TAG, "BuddyLocationRequestPermissionActivity onRequestPermissionsResult");
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length == 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                PLog.i(BuddyAltDataTracker.TAG, "BuddyLocationRequestPermissionActivity onRequestPermissionsResult PERMISSION_GRANTED");
+            } else {
+                PLog.i(BuddyAltDataTracker.TAG, "BuddyLocationRequestPermissionActivity onRequestPermissionsResult NOT PERMISSION_GRANTED");
+                ActivityCompat.requestPermissions(
+                        this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE},
+                        PERMISSION_REQUEST_CODE);
             }
         }
+
+        startService();
     }
 }
