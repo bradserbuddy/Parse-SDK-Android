@@ -80,7 +80,7 @@ public class BuddyAltDataTrackerTest {
 //
 //
 //        // act
-//        BuddyAltDataTracker.getInstance().LoadNewConfiguration();
+//        BuddyAltDataTracker.getInstance().loadNewConfiguration();
 //
 //        // assert
 //

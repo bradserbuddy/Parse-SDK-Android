@@ -1,10 +1,9 @@
 package com.parse;
 
-import android.app.PendingIntent;
+import android.app.*;
 import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.*;
+import android.content.pm.*;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -21,14 +20,15 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.mapzen.android.lost.api.LostApiClient;
 
+import junit.framework.Assert;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import okhttp3.Call;
@@ -76,8 +76,13 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         PLog.i(TAG, "BuddyAltDataTracker initialize");
         this.context = context;
         configuration.set(BuddyPreferences.getConfig(context));
-        permissionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.getApplicationContext().startActivity(permissionIntent);
+
+        if (Build.VERSION.SDK_INT >= 23) {
+            permissionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.getApplicationContext().startActivity(permissionIntent);
+        } else {
+            BuddyAltDataTracker.getInstance().setupServices();
+        }
     }
 
     private void uploadApplicationsList() {
@@ -269,7 +274,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         }
     }
 
-    public void LoadNewConfiguration() {
+    public void loadNewConfiguration() {
         if (!startLoadingNewConfiguration()) {
             return;
         }
@@ -310,44 +315,6 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         }
         else {
             stopLogTimer();
-        }
-    }
-
-    private void configureLocationLogging() {
-        if (configuration.get().shouldLogLocation()) {
-            if (googleApiClient == null) {
-                createGoogleApiClient();
-            }
-            else {
-                startGoogleApiClient();
-            }
-        }
-        else {
-            if (googleApiClient != null) {
-                stopGoogleApiClient();
-            }
-        }
-    }
-
-    private void stopGoogleApiClient() {
-        stopLocationService();
-        stopActivityMonitoring();
-
-        if (googleApiClient.isConnected() || googleApiClient.isConnecting()) {
-            googleApiClient.disconnect();
-            PLog.i(TAG, "google api client: disconnecting to services");
-        }
-    }
-    private void startGoogleApiClient() {
-        //stopGoogleApiClient();
-        if (!googleApiClient.isConnected() && !googleApiClient.isConnecting()) {
-            googleApiClient.connect();
-            PLog.i(TAG, "google api client: connecting to services");
-        }
-        else {
-            // already connected, so init the services
-            initializeActivityMonitoring();
-            initializeLocationService();
         }
     }
 
@@ -457,7 +424,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
     private void handleUploadError(ParseException e) {
         if (e.getCode() == ParseException.VALIDATION_ERROR) {
-            LoadNewConfiguration();
+            loadNewConfiguration();
         }
     }
 
@@ -544,6 +511,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
         context.registerReceiver(actionReceiver, intentFilter);
     }
+
     private void handleEvent() {
         saveCellularInformation();
         saveBatteryInformation();
@@ -612,18 +580,6 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         }
     }
 
-    void setupServices() {
-        PLog.i(TAG, "setupServices");
-        uploadCriteria.updateInitialPowerStatus(context);
-
-        uploadDeviceInformation();
-        uploadApplicationsList();
-        uploadErrors();
-
-        configureLocationLogging();
-        configureCellularLogging();
-    }
-
     private void uploadErrors() {
         final JSONObject errors = BuddySqliteHelper.getInstance().get(BuddySqliteTableType.Error, 0);
 
@@ -665,8 +621,61 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         }
     }
 
-    private void createGoogleApiClient() {
-        PLog.i(TAG, "setupServices GoogleApiClient.Builder");
+    void setupServices() {
+        PLog.i(TAG, "setupServices");
+        uploadCriteria.updateInitialPowerStatus(context);
+
+        uploadDeviceInformation();
+        uploadApplicationsList();
+        uploadErrors();
+
+        configureLocationLogging();
+        configureCellularLogging();
+    }
+
+    private void configureLocationLogging() {
+        if (configuration.get().shouldLogLocation()) {
+            if (googleApiClient == null) {
+                createApiClient();
+            }
+            else {
+                startApiClient();
+            }
+        }
+        else {
+            if (googleApiClient != null) {
+                stopApiClient();
+            }
+        }
+    }
+
+    private void stopApiClient() {
+        stopLocationService();
+        stopActivityMonitoring();
+
+        if (lostApiClient == null) {
+            googleApiClient.disconnect();
+            PLog.i(TAG, "googleApiClient: disconnecting from services");
+        } else {
+            lostApiClient.disconnect();
+            PLog.i(TAG, "lostApiClient: disconnecting from services");
+        }
+    }
+
+    private void startApiClient() {
+        if (lostApiClient == null) {
+            googleApiClient.connect();
+            PLog.i(TAG, "googleApiClient: connecting to services");
+        }
+        else
+        {
+            lostApiClient.connect();
+            PLog.i(TAG, "lostApiClient: connecting to services");
+        }
+    }
+
+    private void createApiClient() {
+        PLog.i(TAG, "createApiClient");
         googleApiClient = new GoogleApiClient.Builder(context)
                 .addApi(LocationServices.API)
                 .addApi(ActivityRecognition.API)
@@ -675,7 +684,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     @Override
                     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
-                        PLog.i(TAG, "setupServices: onConnectionFailed");
+                        PLog.i(TAG, "createApiClient: GoogleApiClient onConnectionFailed");
 
                         if (connectionResult.getErrorCode() == ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED ||
                                 connectionResult.getErrorCode() == ConnectionResult.SERVICE_MISSING) {
@@ -684,32 +693,39 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                                     .addConnectionCallbacks(BuddyAltDataTracker.getInstance())
                                     .build();
 
-                            if (!lostApiClient.isConnected()) {
-                                lostApiClient.connect();
-                            }
+                            lostApiClient.connect();
                         }
                     }
                 })
                 .build();
 
-        startGoogleApiClient();
+        googleApiClient.connect();
     }
 
+    // GoogleApiClient
     @Override
     public void onConnected(Bundle bundle) {
-
-        onConnected();
+        Assert.assertNull (lostApiClient);
+        PLog.i(TAG, "GoogleApiClient onConnected");
+        initializeServices();
     }
 
+    // LostApiClient
+    @Override
+    public void onConnected() {
+        PLog.i(TAG, "LostApiClient onConnected");
+        initializeServices();
+    }
+
+    // GoogleApiClient
     @Override
     public void onConnectionSuspended(int i) {
         onConnectionSuspended();
     }
 
+    // LostApiClient
     @Override
-    public void onConnected() {
-        PLog.i(TAG, "service onConnected");
-        initializeServices();
+    public void onConnectionSuspended() {
     }
 
     private void initializeServices() {
@@ -717,6 +733,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         initializeLocationService();
         setupEvents();
     }
+
     private void stopLocationService() {
         try {
             if (lostApiClient == null) {
@@ -727,7 +744,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 com.mapzen.android.lost.api.LocationServices.FusedLocationApi.removeLocationUpdates(lostApiClient, getPendingIntent());
             }
             PLog.i(TAG, "location service stopped");
-        } catch (Exception e) {
+        } catch (IllegalStateException e) {
             PLog.w(TAG, "Location service stop error because it is already stopped");
         }
     }
@@ -737,13 +754,14 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             if (lostApiClient == null) {
                 Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
                 if (location != null) {
-                    PLog.i(TAG, "setupServices googleApiClient start location is " + location.getLatitude() + " , " + location.getLongitude());
+                    PLog.i(TAG, "initializeLocationService googleApiClient start location is " + location.getLatitude() + " , " + location.getLongitude());
                 }
 
                 LocationRequest locationRequest = new LocationRequest();
                 locationRequest.setPriority((int) configuration.get().getAndroidLocationPowerAccuracy());
                 locationRequest.setFastestInterval(configuration.get().getAndroidLocationFastestUpdateIntervalMs());
                 locationRequest.setInterval(configuration.get().getAndroidLocationUpdateIntervalMs());
+
                 // undo updates
                 LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, getPendingIntent());
                 // enable
@@ -751,29 +769,30 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             } else {
                 Location location = com.mapzen.android.lost.api.LocationServices.FusedLocationApi.getLastLocation(lostApiClient);
                 if (location != null) {
-                    PLog.i(TAG, "setupServices lostApiClient start location is " + location.getLatitude() + " , " + location.getLongitude());
+                    PLog.i(TAG, "initializeLocationService lostApiClient start location is " + location.getLatitude() + " , " + location.getLongitude());
                 }
 
-                com.mapzen.android.lost.api.LocationRequest locationRequest = com.mapzen.android.lost.api.LocationRequest.create();
+                final com.mapzen.android.lost.api.LocationRequest locationRequest = com.mapzen.android.lost.api.LocationRequest.create();
                 locationRequest.setPriority((int) configuration.get().getAndroidLocationPowerAccuracy());
                 locationRequest.setFastestInterval(configuration.get().getAndroidLocationFastestUpdateIntervalMs());
                 locationRequest.setInterval(configuration.get().getAndroidLocationUpdateIntervalMs());
 
                 // undo any updates
                 com.mapzen.android.lost.api.LocationServices.FusedLocationApi.removeLocationUpdates(lostApiClient, getPendingIntent());
+
                 // enable
                 com.mapzen.android.lost.api.LocationServices.FusedLocationApi.requestLocationUpdates(lostApiClient, locationRequest, getPendingIntent());
             }
-            PLog.i(TAG, "setupServices: end GoogleApiClient.Builder");
+            PLog.i(TAG, "initializeLocationService: end");
         } catch (SecurityException e) {
             BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
-            PLog.w(TAG, "setupServices: Missing ACCESS_FINE_LOCATION or com.google.android.gms.permission.ACTIVITY_RECOGNITION permission in the AndroidManifest");
+            PLog.w(TAG, "initializeLocationService: Missing ACCESS_FINE_LOCATION or com.google.android.gms.permission.ACTIVITY_RECOGNITION permission in the AndroidManifest");
             googleApiClient.disconnect();
         }
     }
 
     private void initializeActivityMonitoring() {
-        if (googleApiClient != null) {
+        if (lostApiClient == null) {
             long activityMonitoringInterval = configuration.get().getAndroidActivityMonitoringTimeoutMs();
             // undo any updates
             ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates( googleApiClient, getPendingIntent() );
@@ -783,18 +802,19 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     }
 
     private void stopActivityMonitoring() {
-        if (googleApiClient != null && googleApiClient.isConnected()) {
-            // undo any updates
-            ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates( googleApiClient, getPendingIntent() );
+
+        try {
+            if (lostApiClient == null) {
+                ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates( googleApiClient, getPendingIntent() );
+            }
+            PLog.i(TAG, "activity monitoring stopped");
+        } catch (IllegalStateException e) {
+            PLog.w(TAG, "Activity monitoring stop error because it is already stopped");
         }
     }
 
     private PendingIntent getPendingIntent() {
         Intent i = new Intent(context, BuddyWakefulBroadcastReceiver.class);
         return PendingIntent.getBroadcast(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
-    }
-
-    @Override
-    public void onConnectionSuspended() {
     }
 }
