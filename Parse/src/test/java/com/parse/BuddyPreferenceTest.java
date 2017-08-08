@@ -184,7 +184,7 @@ public class BuddyPreferenceTest {
         BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
-        assertEquals(locationFastestUpdateInterval, configuration.getAndroidLocationFastestUpdateInterval());
+        assertEquals(locationFastestUpdateInterval, configuration.getAndroidLocationFastestUpdateIntervalMs());
     }
 
     @Test
@@ -196,7 +196,7 @@ public class BuddyPreferenceTest {
         BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
-        assertEquals(locationUpdateInterval, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(locationUpdateInterval, configuration.getAndroidLocationUpdateIntervalMs());
     }
 
     @Test
@@ -286,13 +286,13 @@ public class BuddyPreferenceTest {
     @Test
     public void testGetConfigActivityMonitorInterval() throws Exception {
         // arrange
-        when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigActivityMonitorInterval, 0)).thenReturn(androidActivityMonitoringInterval);
+        when(sharedPrefs.getLong(BuddyPreferenceKeys.preferenceConfigActivityMonitorLogTimeoutMs, 0)).thenReturn(androidActivityMonitoringInterval);
 
         // act
         BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
-        assertEquals(androidActivityMonitoringInterval, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(androidActivityMonitoringInterval, configuration.getAndroidActivityMonitoringTimeoutMs());
     }
 
     @Test
@@ -319,15 +319,16 @@ public class BuddyPreferenceTest {
         assertEquals(120, configuration.getCommonMaxBatteryRecords());
         // android stuff
         assertEquals(107, configuration.getAndroidLocationPowerAccuracy());
-        assertEquals(108, configuration.getAndroidLocationFastestUpdateInterval());
-        assertEquals(109, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(108, configuration.getAndroidLocationFastestUpdateIntervalMs());
+        assertEquals(109, configuration.getAndroidLocationUpdateIntervalMs());
         assertTrue(configuration.shouldLogCellular());
         assertTrue(configuration.shouldLogLocation());
         assertTrue(configuration.shouldLogBattery());
         assertFalse(configuration.shouldUploadCellular());
         assertFalse(configuration.shouldUploadLocation());
         assertFalse(configuration.shouldUploadBattery());
-        assertEquals(110, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(110, configuration.getAndroidActivityMonitoringTimeoutMs());
+        assertEquals(127, configuration.getAndroidBatteryLogTimeoutMs());
     }
 
     private JSONObject getDefaultAndroidConfigurationOnly() {
@@ -355,13 +356,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 127,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 110\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 110\n" +
                     "        }\n" +
                     "    ]\n" +
                     "}\n");
@@ -396,15 +398,16 @@ public class BuddyPreferenceTest {
         assertEquals(120, configuration.getCommonMaxBatteryRecords());
         // android stuff
         assertEquals(111, configuration.getAndroidLocationPowerAccuracy());
-        assertEquals(112, configuration.getAndroidLocationFastestUpdateInterval());
-        assertEquals(113, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(112, configuration.getAndroidLocationFastestUpdateIntervalMs());
+        assertEquals(113, configuration.getAndroidLocationUpdateIntervalMs());
         assertFalse(configuration.shouldLogCellular());
         assertFalse(configuration.shouldLogLocation());
         assertFalse(configuration.shouldLogBattery());
         assertTrue(configuration.shouldUploadCellular());
         assertTrue(configuration.shouldUploadLocation());
         assertTrue(configuration.shouldUploadBattery());
-        assertEquals(114, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(114, configuration.getAndroidActivityMonitoringTimeoutMs());
+        assertEquals(127, configuration.getAndroidBatteryLogTimeoutMs());
     }
 
     private JSONObject getDefaultAndroidConfigurationAndOneSingleConfig() {
@@ -432,13 +435,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 110\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 110\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -448,13 +452,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 127,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": true,\n" +
                     "            \"upload-location\": true,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 114\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 114\n" +
                     "        }\n" +
                     "    ]\n" +
                     "}\n");
@@ -489,15 +494,16 @@ public class BuddyPreferenceTest {
         assertEquals(120, configuration.getCommonMaxBatteryRecords());
         // android stuff
         assertEquals(115, configuration.getAndroidLocationPowerAccuracy());
-        assertEquals(116, configuration.getAndroidLocationFastestUpdateInterval());
-        assertEquals(117, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(116, configuration.getAndroidLocationFastestUpdateIntervalMs());
+        assertEquals(117, configuration.getAndroidLocationUpdateIntervalMs());
         assertTrue(configuration.shouldLogCellular());
         assertTrue(configuration.shouldLogLocation());
         assertFalse(configuration.shouldUploadCellular());
         assertFalse(configuration.shouldUploadLocation());
         assertTrue(configuration.shouldLogBattery());
         assertFalse(configuration.shouldUploadBattery());
-        assertEquals(118, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(118, configuration.getAndroidActivityMonitoringTimeoutMs());
+        assertEquals(127, configuration.getAndroidBatteryLogTimeoutMs());
     }
 
     private JSONObject getDefaultAndroidConfigurationAndTwoSingleConfigs() {
@@ -525,13 +531,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 110\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 110\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -541,13 +548,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": true,\n" +
                     "            \"upload-location\": true,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 114\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 114\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"22\",\n" +
@@ -557,13 +565,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 127,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 118\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 118\n" +
                     "        }\n" +
                     "    ]\n" +
                     "}\n");
@@ -598,15 +607,16 @@ public class BuddyPreferenceTest {
         assertEquals(120, configuration.getCommonMaxBatteryRecords());
         // android stuff
         assertEquals(115, configuration.getAndroidLocationPowerAccuracy());
-        assertEquals(116, configuration.getAndroidLocationFastestUpdateInterval());
-        assertEquals(117, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(116, configuration.getAndroidLocationFastestUpdateIntervalMs());
+        assertEquals(117, configuration.getAndroidLocationUpdateIntervalMs());
         assertFalse(configuration.shouldLogCellular());
         assertFalse(configuration.shouldLogLocation());
         assertFalse(configuration.shouldLogBattery());
         assertTrue(configuration.shouldUploadCellular());
         assertTrue(configuration.shouldUploadLocation());
         assertTrue(configuration.shouldUploadBattery());
-        assertEquals(118, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(118, configuration.getAndroidActivityMonitoringTimeoutMs());
+        assertEquals(127, configuration.getAndroidBatteryLogTimeoutMs());
     }
 
     private JSONObject getDefaultAndroidConfigurationAndTwoSingleConfigsWithAppIdAndApiLevel() {
@@ -634,13 +644,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 110\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 110\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -650,13 +661,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 114\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 114\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"*\",\n" +
@@ -666,13 +678,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 127,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": true,\n" +
                     "            \"upload-location\": true,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 118\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 118\n" +
                     "        }\n" +
                     "    ]\n" +
                     "}\n");
@@ -707,15 +720,16 @@ public class BuddyPreferenceTest {
         assertEquals(120, configuration.getCommonMaxBatteryRecords());
         // android stuff
         assertEquals(111, configuration.getAndroidLocationPowerAccuracy());
-        assertEquals(112, configuration.getAndroidLocationFastestUpdateInterval());
-        assertEquals(113, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(112, configuration.getAndroidLocationFastestUpdateIntervalMs());
+        assertEquals(113, configuration.getAndroidLocationUpdateIntervalMs());
         assertFalse(configuration.shouldLogCellular());
         assertFalse(configuration.shouldLogLocation());
         assertTrue(configuration.shouldUploadCellular());
         assertTrue(configuration.shouldUploadLocation());
         assertFalse(configuration.shouldLogBattery());
         assertTrue(configuration.shouldUploadBattery());
-        assertEquals(114, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(114, configuration.getAndroidActivityMonitoringTimeoutMs());
+        assertEquals(127, configuration.getAndroidBatteryLogTimeoutMs());
     }
 
     private JSONObject getDefaultAndroidConfigurationAndTwoSingleConfigsWithAppIdAndModel() {
@@ -743,13 +757,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 110\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 110\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"*\",\n" +
@@ -759,13 +774,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 127,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": true,\n" +
                     "            \"upload-location\": true,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 114\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 114\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"*\",\n" +
@@ -775,13 +791,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": true,\n" +
                     "            \"upload-location\": true,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 118\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 118\n" +
                     "        }\n" +
                     "    ]\n" +
                     "}\n");
@@ -816,8 +833,8 @@ public class BuddyPreferenceTest {
         assertEquals(120, configuration.getCommonMaxBatteryRecords());
         // android stuff
         assertEquals(111, configuration.getAndroidLocationPowerAccuracy());
-        assertEquals(112, configuration.getAndroidLocationFastestUpdateInterval());
-        assertEquals(113, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(112, configuration.getAndroidLocationFastestUpdateIntervalMs());
+        assertEquals(113, configuration.getAndroidLocationUpdateIntervalMs());
         assertFalse(configuration.shouldLogCellular());
         assertFalse(configuration.shouldLogLocation());
         assertTrue(configuration.shouldUploadCellular());
@@ -826,7 +843,8 @@ public class BuddyPreferenceTest {
         assertTrue(configuration.shouldUploadBattery());
         assertFalse(configuration.shouldLogBattery());
         assertTrue(configuration.shouldUploadBattery());
-        assertEquals(114, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(114, configuration.getAndroidActivityMonitoringTimeoutMs());
+        assertEquals(127, configuration.getAndroidBatteryLogTimeoutMs());
     }
 
     private JSONObject getDefaultAndroidConfigurationAndTwoSingleConfigsWithApiLevelAndModel() {
@@ -854,13 +872,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 110\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 110\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -870,13 +889,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 127,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": true,\n" +
                     "            \"upload-location\": true,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 114\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 114\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"*\",\n" +
@@ -886,13 +906,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 118\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 118\n" +
                     "        }\n" +
                     "    ]\n" +
                     "}\n");
@@ -927,15 +948,16 @@ public class BuddyPreferenceTest {
         assertEquals(120, configuration.getCommonMaxBatteryRecords());
         // android stuff
         assertEquals(115, configuration.getAndroidLocationPowerAccuracy());
-        assertEquals(116, configuration.getAndroidLocationFastestUpdateInterval());
-        assertEquals(117, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(116, configuration.getAndroidLocationFastestUpdateIntervalMs());
+        assertEquals(117, configuration.getAndroidLocationUpdateIntervalMs());
         assertFalse(configuration.shouldLogCellular());
         assertFalse(configuration.shouldLogLocation());
         assertTrue(configuration.shouldUploadCellular());
         assertTrue(configuration.shouldUploadLocation());
         assertFalse(configuration.shouldLogBattery());
         assertTrue(configuration.shouldUploadBattery());
-        assertEquals(118, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(118, configuration.getAndroidActivityMonitoringTimeoutMs());
+        assertEquals(127, configuration.getAndroidBatteryLogTimeoutMs());
     }
 
     private JSONObject getDefaultAndroidConfigurationAndOneDoubleConfig() {
@@ -963,13 +985,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 110\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 110\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -979,13 +1002,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 114\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 114\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -995,13 +1019,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 127,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": true,\n" +
                     "            \"upload-location\": true,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 118\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 118\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"22\",\n" +
@@ -1011,13 +1036,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 120,\n" +
                     "            \"location-update-interval-ms\": 121,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 122\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 122\n" +
                     "        }\n" +
                     "    ]\n" +
                     "}\n");
@@ -1052,15 +1078,16 @@ public class BuddyPreferenceTest {
         assertEquals(120, configuration.getCommonMaxBatteryRecords());
         // android stuff
         assertEquals(119, configuration.getAndroidLocationPowerAccuracy());
-        assertEquals(120, configuration.getAndroidLocationFastestUpdateInterval());
-        assertEquals(121, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(120, configuration.getAndroidLocationFastestUpdateIntervalMs());
+        assertEquals(121, configuration.getAndroidLocationUpdateIntervalMs());
         assertFalse(configuration.shouldLogCellular());
         assertFalse(configuration.shouldLogLocation());
         assertTrue(configuration.shouldUploadCellular());
         assertTrue(configuration.shouldUploadLocation());
         assertFalse(configuration.shouldLogBattery());
         assertTrue(configuration.shouldUploadBattery());
-        assertEquals(122, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(122, configuration.getAndroidActivityMonitoringTimeoutMs());
+        assertEquals(127, configuration.getAndroidBatteryLogTimeoutMs());
     }
 
     private JSONObject getDefaultAndroidConfigurationAndTwoDoubleConfigAppIdAndApiLevel() {
@@ -1088,13 +1115,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 110\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 110\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -1104,13 +1132,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 114\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 114\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -1119,6 +1148,7 @@ public class BuddyPreferenceTest {
                     "            \"location-power-accuracy\": 115,\n" +
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
@@ -1126,7 +1156,7 @@ public class BuddyPreferenceTest {
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 118\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 118\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -1136,13 +1166,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 120,\n" +
                     "            \"location-update-interval-ms\": 121,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 127,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": true,\n" +
                     "            \"upload-location\": true,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 122\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 122\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"22\",\n" +
@@ -1152,13 +1183,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 124,\n" +
                     "            \"location-update-interval-ms\": 125,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 126\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 126\n" +
                     "        }\n" +
                     "    ]\n" +
                     "}\n");
@@ -1193,15 +1225,16 @@ public class BuddyPreferenceTest {
         assertEquals(120, configuration.getCommonMaxBatteryRecords());
         // android stuff
         assertEquals(119, configuration.getAndroidLocationPowerAccuracy());
-        assertEquals(120, configuration.getAndroidLocationFastestUpdateInterval());
-        assertEquals(121, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(120, configuration.getAndroidLocationFastestUpdateIntervalMs());
+        assertEquals(121, configuration.getAndroidLocationUpdateIntervalMs());
         assertFalse(configuration.shouldLogCellular());
         assertFalse(configuration.shouldLogLocation());
         assertTrue(configuration.shouldUploadCellular());
         assertTrue(configuration.shouldUploadLocation());
         assertFalse(configuration.shouldLogBattery());
         assertTrue(configuration.shouldUploadBattery());
-        assertEquals(122, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(122, configuration.getAndroidActivityMonitoringTimeoutMs());
+        assertEquals(127, configuration.getAndroidBatteryLogTimeoutMs());
     }
 
     private JSONObject getDefaultAndroidConfigurationAndTwoDoubleConfigAppIdAndModel() {
@@ -1229,13 +1262,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 110\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 110\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -1245,13 +1279,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 114\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 114\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -1261,13 +1296,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 118\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 118\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"*\",\n" +
@@ -1277,13 +1313,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 120,\n" +
                     "            \"location-update-interval-ms\": 121,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 127,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": true,\n" +
                     "            \"upload-location\": true,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 122\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 122\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"22\",\n" +
@@ -1293,13 +1330,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 124,\n" +
                     "            \"location-update-interval-ms\": 125,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 126\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 126\n" +
                     "        }\n" +
                     "    ]\n" +
                     "}\n");
@@ -1334,15 +1372,16 @@ public class BuddyPreferenceTest {
         assertEquals(120, configuration.getCommonMaxBatteryRecords());
         // android stuff
         assertEquals(115, configuration.getAndroidLocationPowerAccuracy());
-        assertEquals(116, configuration.getAndroidLocationFastestUpdateInterval());
-        assertEquals(117, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(116, configuration.getAndroidLocationFastestUpdateIntervalMs());
+        assertEquals(117, configuration.getAndroidLocationUpdateIntervalMs());
         assertFalse(configuration.shouldLogCellular());
         assertFalse(configuration.shouldLogLocation());
         assertTrue(configuration.shouldUploadCellular());
         assertTrue(configuration.shouldUploadLocation());
         assertFalse(configuration.shouldLogBattery());
         assertTrue(configuration.shouldUploadBattery());
-        assertEquals(118, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(118, configuration.getAndroidActivityMonitoringTimeoutMs());
+        assertEquals(127, configuration.getAndroidBatteryLogTimeoutMs());
     }
 
     private JSONObject getDefaultAndroidConfigurationAndTwoDoubleConfigApiLevelAndModel() {
@@ -1370,13 +1409,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 110\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 110\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -1386,13 +1426,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 114\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 114\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -1402,13 +1443,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 127,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": true,\n" +
                     "            \"upload-location\": true,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 118\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 118\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"22\",\n" +
@@ -1418,13 +1460,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 120,\n" +
                     "            \"location-update-interval-ms\": 121,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 122\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 122\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"22\",\n" +
@@ -1434,13 +1477,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 124,\n" +
                     "            \"location-update-interval-ms\": 125,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 126\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 126\n" +
                     "        }\n" +
                     "    ]\n" +
                     "}\n");
@@ -1475,15 +1519,16 @@ public class BuddyPreferenceTest {
         assertEquals(120, configuration.getCommonMaxBatteryRecords());
         // android stuff
         assertEquals(119, configuration.getAndroidLocationPowerAccuracy());
-        assertEquals(120, configuration.getAndroidLocationFastestUpdateInterval());
-        assertEquals(121, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(120, configuration.getAndroidLocationFastestUpdateIntervalMs());
+        assertEquals(121, configuration.getAndroidLocationUpdateIntervalMs());
         assertFalse(configuration.shouldLogCellular());
         assertFalse(configuration.shouldLogLocation());
         assertTrue(configuration.shouldUploadCellular());
         assertTrue(configuration.shouldUploadLocation());
         assertFalse(configuration.shouldLogBattery());
         assertTrue(configuration.shouldUploadBattery());
-        assertEquals(122, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(122, configuration.getAndroidActivityMonitoringTimeoutMs());
+        assertEquals(127, configuration.getAndroidBatteryLogTimeoutMs());
     }
 
     private JSONObject getDefaultAndroidConfigurationAndTwoTrippleConfig() {
@@ -1511,13 +1556,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 108,\n" +
                     "            \"location-update-interval-ms\": 109,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 110\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 110\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -1527,13 +1573,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 112,\n" +
                     "            \"location-update-interval-ms\": 113,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 114\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 114\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -1543,13 +1590,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 116,\n" +
                     "            \"location-update-interval-ms\": 117,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 118\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 118\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"22\",\n" +
@@ -1559,13 +1607,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 120,\n" +
                     "            \"location-update-interval-ms\": 121,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 122\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 122\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"23\",\n" +
@@ -1575,13 +1624,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 120,\n" +
                     "            \"location-update-interval-ms\": 121,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 127,\n" +
                     "            \"log-cellular\": false,\n" +
                     "            \"log-location\": false,\n" +
                     "            \"log-battery\": false,\n" +
                     "            \"upload-cellular\": true,\n" +
                     "            \"upload-location\": true,\n" +
                     "            \"upload-battery\": true,\n" +
-                    "            \"activity-monitor-interval\": 122\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 122\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"api-level\": \"22\",\n" +
@@ -1591,13 +1641,14 @@ public class BuddyPreferenceTest {
                     "            \"location-fastest-update-interval-ms\": 124,\n" +
                     "            \"location-update-interval-ms\": 125,\n" +
                     "      \"cellular-log-timeout-ms\": 102,\n" +
+                    "      \"battery-log-timeout-ms\": 128,\n" +
                     "            \"log-cellular\": true,\n" +
                     "            \"log-location\": true,\n" +
                     "            \"log-battery\": true,\n" +
                     "            \"upload-cellular\": false,\n" +
                     "            \"upload-location\": false,\n" +
                     "            \"upload-battery\": false,\n" +
-                    "            \"activity-monitor-interval\": 126\n" +
+                    "            \"activity-monitor-log-timeout-ms\": 126\n" +
                     "        }\n" +
                     "    ]\n" +
                     "}\n");

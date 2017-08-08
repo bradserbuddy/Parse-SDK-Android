@@ -99,10 +99,10 @@ public class BuddyConfigurationTest {
         long androidLocationUpdateInterval = 20;
 
         // act
-        configuration.setAndroidLocationUpdateInterval(androidLocationUpdateInterval);
+        configuration.setAndroidLocationUpdateIntervalMs(androidLocationUpdateInterval);
 
         // assert
-        assertEquals(androidLocationUpdateInterval, configuration.getAndroidLocationUpdateInterval());
+        assertEquals(androidLocationUpdateInterval, configuration.getAndroidLocationUpdateIntervalMs());
     }
 
     @Test
@@ -112,10 +112,10 @@ public class BuddyConfigurationTest {
         long androidLocationFastestUpdateInterval = 19;
 
         // act
-        configuration.setAndroidLocationFastestUpdateInterval(androidLocationFastestUpdateInterval);
+        configuration.setAndroidLocationFastestUpdateIntervalMs(androidLocationFastestUpdateInterval);
 
         // assert
-        assertEquals(androidLocationFastestUpdateInterval, configuration.getAndroidLocationFastestUpdateInterval());
+        assertEquals(androidLocationFastestUpdateInterval, configuration.getAndroidLocationFastestUpdateIntervalMs());
     }
 
     @Test
@@ -242,9 +242,9 @@ public class BuddyConfigurationTest {
         long activityMonitorInterval = 9;
 
         // act
-        configuration.setAndroidActivityMonitoringInterval(activityMonitorInterval);
+        configuration.setAndroidActivityMonitoringTimeoutMs(activityMonitorInterval);
 
         // assert
-        assertEquals(activityMonitorInterval, configuration.getAndroidActivityMonitoringInterval());
+        assertEquals(activityMonitorInterval, configuration.getAndroidActivityMonitoringTimeoutMs());
     }
 }

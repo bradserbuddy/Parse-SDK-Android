@@ -20,7 +20,8 @@ public class BuddyPreferenceKeys {
     public static final String preferenceConfigBatteryMaxRecords = "max-battery-records";
     public static final String preferenceConfigErrorMaxRecords = "max-error-records";
     public static final String preferenceConfigMaxRecordsToDelete = "max-records-to-delete";
-    public static final String preferenceConfigActivityMonitorInterval = "activity-monitor-interval";
+    public static final String preferenceConfigActivityMonitorLogTimeoutMs = "activity-monitor-log-timeout-ms";
+    public static final String preferenceConfigBatteryLogTimeoutMs = "battery-log-timeout-ms";
     public static final String preferenceConfigAppId = "app-id";
     public static final String preferenceConfigApiLevel = "api-level";
     public static final String preferenceConfigModel = "model";
