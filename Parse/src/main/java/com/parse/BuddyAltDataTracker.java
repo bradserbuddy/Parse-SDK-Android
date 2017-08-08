@@ -106,10 +106,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     }
     private void startCellularInfoLogTimer() {
         stopCellularInfoLogTimer();
-
-        if (networkInfoLogTimer != null) {
-            networkInfoLogTimer.cancel();
-        }
+        
         networkInfoLogTimer = new Timer();
         networkInfoLogTimer.schedule(new TimerTask() {
             @Override
