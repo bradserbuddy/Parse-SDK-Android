@@ -10,8 +10,8 @@ public class BuddyConfiguration {
     private long commonMaxBatteryRecords;
     private long commonMaxRecordsToDelete;
     private long androidLocationPowerAccuracy;
-    private long androidLocationFastestUpdateInterval;
-    private long androidLocationUpdateInterval;
+    private long androidLocationFastestUpdateIntervalMs;
+    private long androidLocationUpdateIntervalMs;
     private boolean androidLogCellular;
     private boolean androidLogLocation;
     private boolean androidLogBattery;
@@ -20,8 +20,9 @@ public class BuddyConfiguration {
     private boolean androidUploadBattery;
     private long androidCellularLogTimeout;
     private long lastUploadedEpoch;
-    private long androidActivityMonitoringInterval;
+    private long androidActivityMonitoringTimeoutMs;
     private long commonBatteryPushBatchSize;
+    private long androidBatteryLogTimeoutMs;
 
     public long getCommonCellularPushBatchSize() {
         return commonCellularPushBatchSize;
@@ -33,6 +34,16 @@ public class BuddyConfiguration {
 
     public long getAndroidCellularLogTimeout() {
         return androidCellularLogTimeout;
+    }
+
+    public long getAndroidLogTimeout() {
+        long timeout = androidCellularLogTimeout;
+
+        if (androidBatteryLogTimeoutMs < androidCellularLogTimeout) {
+            timeout = androidBatteryLogTimeoutMs;
+        }
+
+        return timeout;
     }
 
     public void setAndroidCellularLogTimeout(long androidCellularLogTimeout) {
@@ -63,20 +74,20 @@ public class BuddyConfiguration {
         this.androidLocationPowerAccuracy = androidLocationPowerAccuracy;
     }
 
-    public long getAndroidLocationFastestUpdateInterval() {
-        return androidLocationFastestUpdateInterval;
+    public long getAndroidLocationFastestUpdateIntervalMs() {
+        return androidLocationFastestUpdateIntervalMs;
     }
 
-    public void setAndroidLocationFastestUpdateInterval(long androidLocationFastestUpdateInterval) {
-        this.androidLocationFastestUpdateInterval = androidLocationFastestUpdateInterval;
+    public void setAndroidLocationFastestUpdateIntervalMs(long androidLocationFastestUpdateIntervalMs) {
+        this.androidLocationFastestUpdateIntervalMs = androidLocationFastestUpdateIntervalMs;
     }
 
-    public long getAndroidLocationUpdateInterval() {
-        return androidLocationUpdateInterval;
+    public long getAndroidLocationUpdateIntervalMs() {
+        return androidLocationUpdateIntervalMs;
     }
 
-    public void setAndroidLocationUpdateInterval(long androidLocationUpdateInterval) {
-        this.androidLocationUpdateInterval = androidLocationUpdateInterval;
+    public void setAndroidLocationUpdateIntervalMs(long androidLocationUpdateIntervalMs) {
+        this.androidLocationUpdateIntervalMs = androidLocationUpdateIntervalMs;
     }
 
     public boolean shouldLogCellular() {
@@ -151,12 +162,12 @@ public class BuddyConfiguration {
         this.commonMaxErrorRecords = commonMaxErrorRecords;
     }
 
-    public long getAndroidActivityMonitoringInterval() {
-        return androidActivityMonitoringInterval;
+    public long getAndroidActivityMonitoringTimeoutMs() {
+        return androidActivityMonitoringTimeoutMs;
     }
 
-    public void setAndroidActivityMonitoringInterval(long androidActivityMonitoringInterval) {
-        this.androidActivityMonitoringInterval = androidActivityMonitoringInterval;
+    public void setAndroidActivityMonitoringTimeoutMs(long androidActivityMonitoringTimeoutMs) {
+        this.androidActivityMonitoringTimeoutMs = androidActivityMonitoringTimeoutMs;
     }
 
     public long getCommonBatteryPushBatchSize() {
@@ -189,5 +200,13 @@ public class BuddyConfiguration {
 
     public void setUploadBattery(boolean androidUploadBattery) {
         this.androidUploadBattery = androidUploadBattery;
+    }
+
+    public long getAndroidBatteryLogTimeoutMs() {
+        return androidBatteryLogTimeoutMs;
+    }
+
+    public void setAndroidBatteryLogTimeoutMs(long androidBatteryLogTimeoutMs) {
+        this.androidBatteryLogTimeoutMs = androidBatteryLogTimeoutMs;
     }
 }

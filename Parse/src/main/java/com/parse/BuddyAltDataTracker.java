@@ -98,15 +98,15 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         }
     }
 
-    private void stopCellularInfoLogTimer() {
+    private void stopLogTimer() {
         if (networkInfoLogTimer != null) {
             networkInfoLogTimer.cancel();
-            PLog.i(TAG, "log cellular info timer disabled");
+            PLog.i(TAG, "log timer disabled");
         }
     }
-    private void startCellularInfoLogTimer() {
-        stopCellularInfoLogTimer();
-        
+    private void startLogTimer() {
+        stopLogTimer();
+
         networkInfoLogTimer = new Timer();
         networkInfoLogTimer.schedule(new TimerTask() {
             @Override
@@ -114,12 +114,14 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 saveCellularInformation();
                 saveBatteryInformation();
             }
-        }, 0, configuration.get().getAndroidCellularLogTimeout());
-        PLog.i(TAG, "log cellular info timer enabled");
+        }, 0, configuration.get().getAndroidLogTimeout());
+        PLog.i(TAG, "log timer enabled");
     }
 
     public void saveCellularInformation() {
-        BuddyCellularInformation.save(context);
+        if (uploadCriteria.getHasEnoughBattery(context)) {
+            BuddyCellularInformation.save(context);
+        }
     }
 
     private void uploadDeviceInformation() {
@@ -304,10 +306,10 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
     private void configureCellularLogging() {
         if (configuration.get().shouldLogCellular()) {
-            startCellularInfoLogTimer();
+            startLogTimer();
         }
         else {
-            stopCellularInfoLogTimer();
+            stopLogTimer();
         }
     }
 
@@ -543,9 +545,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         context.registerReceiver(actionReceiver, intentFilter);
     }
     private void handleEvent() {
-        if (uploadCriteria.getHasEnoughBattery(context)) {
-            saveCellularInformation();
-        }
+        saveCellularInformation();
         saveBatteryInformation();
 
         upload();
@@ -742,8 +742,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
                 LocationRequest locationRequest = new LocationRequest();
                 locationRequest.setPriority((int) configuration.get().getAndroidLocationPowerAccuracy());
-                locationRequest.setFastestInterval(configuration.get().getAndroidLocationFastestUpdateInterval());
-                locationRequest.setInterval(configuration.get().getAndroidLocationUpdateInterval());
+                locationRequest.setFastestInterval(configuration.get().getAndroidLocationFastestUpdateIntervalMs());
+                locationRequest.setInterval(configuration.get().getAndroidLocationUpdateIntervalMs());
                 // undo updates
                 LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, getPendingIntent());
                 // enable
@@ -756,8 +756,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
                 com.mapzen.android.lost.api.LocationRequest locationRequest = com.mapzen.android.lost.api.LocationRequest.create();
                 locationRequest.setPriority((int) configuration.get().getAndroidLocationPowerAccuracy());
-                locationRequest.setFastestInterval(configuration.get().getAndroidLocationFastestUpdateInterval());
-                locationRequest.setInterval(configuration.get().getAndroidLocationUpdateInterval());
+                locationRequest.setFastestInterval(configuration.get().getAndroidLocationFastestUpdateIntervalMs());
+                locationRequest.setInterval(configuration.get().getAndroidLocationUpdateIntervalMs());
 
                 // undo any updates
                 com.mapzen.android.lost.api.LocationServices.FusedLocationApi.removeLocationUpdates(lostApiClient, getPendingIntent());
@@ -774,7 +774,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
     private void initializeActivityMonitoring() {
         if (googleApiClient != null) {
-            long activityMonitoringInterval = configuration.get().getAndroidActivityMonitoringInterval();
+            long activityMonitoringInterval = configuration.get().getAndroidActivityMonitoringTimeoutMs();
             // undo any updates
             ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates( googleApiClient, getPendingIntent() );
             // redo updates
