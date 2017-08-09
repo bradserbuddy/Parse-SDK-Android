@@ -46,7 +46,7 @@
         <activity
             android:name=".BuddyLocationRequestPermissionActivity"
             android:exported="false"
-            android:theme="@style/Hide"
+            android:theme="@style/AppTheme.Transparent"
             android:excludeFromRecents="true"/>
     </application>
 
