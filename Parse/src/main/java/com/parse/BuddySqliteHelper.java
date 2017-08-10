@@ -322,16 +322,22 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
         long numRows = 0;
 
         if (openDatabase()) {
+            SQLiteStatement statement = null;
             try {
                 String tableName = BuddySqliteTableInformation.getTableName(tableType);
                 if (tableName != null) {
                     String query = String.format(Locale.US, "select count(*) from %s;", tableName);
-                    SQLiteStatement statement = db.compileStatement(query);
+                    statement = db.compileStatement(query);
                     numRows = statement.simpleQueryForLong();
                 }
             }
             catch (Exception e) {
                 PLog.i(TAG, e.getMessage());
+            }
+            finally {
+                if (statement != null) {
+                    statement.close();
+                }
             }
         }
 
