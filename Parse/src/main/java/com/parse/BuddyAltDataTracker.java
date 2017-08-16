@@ -3,7 +3,6 @@ package com.parse;
 import android.app.*;
 import android.content.BroadcastReceiver;
 import android.content.*;
-import android.content.pm.*;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -54,7 +53,7 @@ import okhttp3.Response;
 
 class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostApiClient.ConnectionCallbacks {
     public static final String TAG = "com.parse.BuddyAltDataTracker";
-    private Timer networkInfoLogTimer;
+    private Timer logTimer;
     private static BuddyUploadCriteria uploadCriteria = new BuddyUploadCriteria();
     private static GoogleApiClient googleApiClient;
     private static LostApiClient lostApiClient;
@@ -104,16 +103,16 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     }
 
     private void stopLogTimer() {
-        if (networkInfoLogTimer != null) {
-            networkInfoLogTimer.cancel();
+        if (logTimer != null) {
+            logTimer.cancel();
             PLog.i(TAG, "log timer disabled");
         }
     }
     private void startLogTimer() {
         stopLogTimer();
 
-        networkInfoLogTimer = new Timer();
-        networkInfoLogTimer.schedule(new TimerTask() {
+        logTimer = new Timer();
+        logTimer.schedule(new TimerTask() {
             @Override
             public void run() {
                 saveCellularInformation();
@@ -298,7 +297,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                         configuration.set(BuddyPreferences.update(context, configJson,applicationId));
 
                         configureLocationLogging();
-                        configureCellularLogging();
+                        configureCellularAndBatteryLogging();
 
                     } catch (JSONException e) {
                         BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
@@ -309,8 +308,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         });
     }
 
-    private void configureCellularLogging() {
-        if (configuration.get().shouldLogCellular()) {
+    private void configureCellularAndBatteryLogging() {
+        if (configuration.get().shouldLogCellular() || configuration.get().shouldLogBattery()) {
             startLogTimer();
         }
         else {
@@ -630,7 +629,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         uploadErrors();
 
         configureLocationLogging();
-        configureCellularLogging();
+        configureCellularAndBatteryLogging();
     }
 
     private void configureLocationLogging() {
