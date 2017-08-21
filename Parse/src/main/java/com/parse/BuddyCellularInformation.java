@@ -165,17 +165,17 @@ public class BuddyCellularInformation {
             cellInformation.put("data",cellInformationArray);
         }
         catch (Exception e) {
-            BuddySqliteHelper.getInstance().logError(BuddyAltDataTracker.TAG, e.getMessage());
+            BuddySqliteHelper.getInstance().logError(BuddyAltDataTracker.TAG, e);
         }
 
         return cellInformation;
     }
 
     public static void save(Context context) {
-        if (!BuddyApplicationState.isInBackground(context)) {
+        //if (!BuddyApplicationState.isInBackground(context)) {
             TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
             if (telephonyManager == null) {
-                BuddySqliteHelper.getInstance().logError(TAG, "TelephonyManager is null");
+                BuddySqliteHelper.getInstance().logError(TAG, new Exception("TelephonyManager is null"));
             }
             else {
                 try {
@@ -190,14 +190,14 @@ public class BuddyCellularInformation {
                         BuddySqliteHelper.getInstance().save(BuddySqliteTableType.Cellular, contentValues);
                         PLog.i(TAG, "cellular data saved");
                     } catch (Exception e) {
-                        BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                        BuddySqliteHelper.getInstance().logError(TAG, e);
                     }
                 }
                 catch (Exception e) {
-                    BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                    BuddySqliteHelper.getInstance().logError(TAG, e);
                 }
             }
-        }
+        //}
     }
 
 }

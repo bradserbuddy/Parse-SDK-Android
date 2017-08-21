@@ -69,7 +69,7 @@ public class BuddyIntentService extends IntentService {
                         contentValues.put(BuddySqliteLocationTableKeys.Activity,activity);
                     }
                 } catch (Exception e) {
-                    BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                    BuddySqliteHelper.getInstance().logError(TAG, e);
                 }
                 BuddySqliteHelper.getInstance().save(BuddySqliteTableType.Location,contentValues);
                 PLog.i(TAG, "saved location " + latitude + " , " + longitude + ", activity = " + activity);
@@ -150,7 +150,7 @@ public class BuddyIntentService extends IntentService {
                 PLog.i(TAG, "activity : " + activityName);
             }
         } catch (Exception e) {
-            BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+            BuddySqliteHelper.getInstance().logError(TAG, e);
         }
     }
 

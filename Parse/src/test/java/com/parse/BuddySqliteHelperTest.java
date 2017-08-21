@@ -20,6 +20,7 @@ import org.robolectric.annotation.Config;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -39,7 +40,7 @@ public class BuddySqliteHelperTest {
     private double verticalAccuracyMeters = 10;
     private final String TAG = "location tracker";
     private final String message = "broken";
-    private final String savedError = TAG + " - " + message;
+    private final String savedError = message;
     private final String cellularBody = "{\"cellinfo\": \"here\"}";
 
     @Rule
@@ -80,6 +81,8 @@ public class BuddySqliteHelperTest {
 
         JSONObject item = items.getJSONObject(0);
         assertEquals(savedError, item.get("message"));
+        assertEquals(TAG, item.get("tag"));
+        assertNotNull(item.get("stacktrace"));
     }
 
     @Test
@@ -235,7 +238,7 @@ public class BuddySqliteHelperTest {
     }
 
     private void saveSampleError() {
-        dbHelper.logError(TAG, message);
+        dbHelper.logError(TAG, new Exception(message));
     }
 
     private void saveSampleLocation() {
