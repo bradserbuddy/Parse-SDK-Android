@@ -13,6 +13,7 @@ public class BuddyRemoteConfiguration {
     private BuddyRemoteConfigValidity modelValidity = null;
     private JSONObject config;
     private BuddyRemoteConfigValidity appIdValidity = null;
+    private static final String TAG = "com.parse.BuddyRemoteConfiguration";
 
     public JSONObject getConfiguration() {
         return this.config;
@@ -33,8 +34,8 @@ public class BuddyRemoteConfiguration {
         boolean result = false;
         try {
             result = apiLevelValidity == BuddyRemoteConfigValidity.Specific && Integer.toString(apiLevel).equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigApiLevel));
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            BuddySqliteHelper.getInstance().logError(TAG, e);
         }
 
         return result;
@@ -44,8 +45,8 @@ public class BuddyRemoteConfiguration {
         boolean result = false;
         try {
             result = appIdValidity == BuddyRemoteConfigValidity.Specific && applicationId.equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigAppId));
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            BuddySqliteHelper.getInstance().logError(TAG, e);
         }
 
         return result;
@@ -55,8 +56,8 @@ public class BuddyRemoteConfiguration {
         boolean result = false;
         try {
             result = modelValidity == BuddyRemoteConfigValidity.Specific && deviceModel.equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigModel));
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            BuddySqliteHelper.getInstance().logError(TAG, e);
         }
 
         return result;
@@ -69,8 +70,8 @@ public class BuddyRemoteConfiguration {
             if (!this.config.getString(preferenceConfig).equalsIgnoreCase("*")) {
                 validity = BuddyRemoteConfigValidity.Specific;
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            BuddySqliteHelper.getInstance().logError(TAG, e);
         }
 
         return validity;
@@ -97,8 +98,8 @@ public class BuddyRemoteConfiguration {
         try {
             result = appIdValidity == BuddyRemoteConfigValidity.Specific && applicationId.equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigAppId))
                     && apiLevelValidity == BuddyRemoteConfigValidity.Specific && Integer.toString(apiLevel).equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigApiLevel));
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            BuddySqliteHelper.getInstance().logError(TAG, e);
         }
 
         return result;
@@ -110,8 +111,8 @@ public class BuddyRemoteConfiguration {
         try {
             result = appIdValidity == BuddyRemoteConfigValidity.Specific && applicationId.equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigAppId))
                     && modelValidity == BuddyRemoteConfigValidity.Specific && deviceModel.equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigModel));
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            BuddySqliteHelper.getInstance().logError(TAG, e);
         }
 
         return result;
@@ -123,8 +124,8 @@ public class BuddyRemoteConfiguration {
         try {
             result = apiLevelValidity == BuddyRemoteConfigValidity.Specific && Integer.toString(apiLevel).equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigApiLevel))
                     && modelValidity == BuddyRemoteConfigValidity.Specific && deviceModel.equalsIgnoreCase(config.getString(BuddyPreferenceKeys.preferenceConfigModel));
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            BuddySqliteHelper.getInstance().logError(TAG, e);
         }
 
         return result;
@@ -140,8 +141,8 @@ public class BuddyRemoteConfiguration {
             result = appIdValidity == BuddyRemoteConfigValidity.Specific && applicationId.equalsIgnoreCase(configAppId)
                     && apiLevelValidity == BuddyRemoteConfigValidity.Specific && Integer.toString(apiLevel).equalsIgnoreCase(configApiLevel)
                     && modelValidity == BuddyRemoteConfigValidity.Specific && deviceModel.equalsIgnoreCase(configModel);
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            BuddySqliteHelper.getInstance().logError(TAG, e);
         }
 
         return result;
