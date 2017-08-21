@@ -120,11 +120,11 @@ public class BuddyPreferences {
                 result = config.getLong(key);
             } catch (JSONException e) {
                 // could be an invalid value
-                BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                BuddySqliteHelper.getInstance().logError(TAG, e);
             }
         }
         else {
-            BuddySqliteHelper.getInstance().logError(TAG, "missing " + key + " remote config");
+            BuddySqliteHelper.getInstance().logError(TAG, new Exception("missing " + key + " remote config"));
         }
 
         return result;
@@ -137,11 +137,11 @@ public class BuddyPreferences {
                 result = config.getBoolean(key);
             } catch (JSONException e) {
                 // could be an invalid value
-                BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                BuddySqliteHelper.getInstance().logError(TAG, e);
             }
         }
         else {
-            BuddySqliteHelper.getInstance().logError(TAG, "missing " + key + " remote config");
+            BuddySqliteHelper.getInstance().logError(TAG, new Exception("missing " + key + " remote config"));
         }
 
         return result;
@@ -241,7 +241,7 @@ public class BuddyPreferences {
                 }
             }
         } catch (Exception e) {
-            BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+            BuddySqliteHelper.getInstance().logError(TAG, e);
         }
 
         return savedConfig;

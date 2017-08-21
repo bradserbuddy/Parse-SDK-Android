@@ -37,7 +37,7 @@ public class BuddyApplication {
                 applicationsObject.put("deviceId", deviceId);
                 applicationsObject.put("version", version);
             } catch (JSONException e) {
-                BuddySqliteHelper.getInstance().logError(BuddyAltDataTracker.TAG, e.getMessage());
+                BuddySqliteHelper.getInstance().logError(BuddyAltDataTracker.TAG, e);
             }
         }
         return applicationsObject;

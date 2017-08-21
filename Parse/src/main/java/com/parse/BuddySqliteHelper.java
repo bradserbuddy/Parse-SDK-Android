@@ -12,6 +12,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -23,7 +25,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
     public static final String TAG = "com.parse.BuddySqliteHelper";
     private static final String DATABASE_NAME = "Buddy.db";
     private static SQLiteDatabase db;
-    private static final int dbVersion = 7; // bump up on every release
+    private static final int dbVersion = 8; // bump up on every release
 
     public static synchronized BuddySqliteHelper getInstance() {
         if (Instance == null) {
@@ -51,9 +53,9 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
 
     private void CreateErrorTable(SQLiteDatabase db) {
         String query = String.format("create table %s ( %s text primary key, %s integer(4) default " +
-                        "(cast(strftime('%%s', 'now') as int)) , %s text )",
+                        "(cast(strftime('%%s', 'now') as int)) , %s text, %s text, %s text )",
                 BuddySqliteErrorTableKeys.TableName, BuddySqliteErrorTableKeys.Uuid, BuddySqliteErrorTableKeys.Timestamp,
-                BuddySqliteErrorTableKeys.Message);
+                BuddySqliteErrorTableKeys.Message, BuddySqliteErrorTableKeys.Tag, BuddySqliteErrorTableKeys.Stacktrace);
         db.execSQL(query);
     }
 
@@ -140,12 +142,20 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
         return isSuccessful;
     }
 
-    void logError(String tag, String message) {
+    public String getStackTraceString(Exception e){
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        return sw.toString();
+    }
+
+    void logError(String tag, Exception e) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(BuddySqliteErrorTableKeys.Uuid, UUID.randomUUID().toString());
-        String errorMessage = String.format("%s - %s", tag, message );
-        contentValues.put(BuddySqliteErrorTableKeys.Message, errorMessage);
-
+        String stackTrace = getStackTraceString(e);
+        contentValues.put(BuddySqliteErrorTableKeys.Stacktrace, stackTrace);
+        contentValues.put(BuddySqliteErrorTableKeys.Tag, tag);
+        contentValues.put(BuddySqliteErrorTableKeys.Message, e.getMessage());
         save(BuddySqliteTableType.Error,contentValues);
     }
 
@@ -261,6 +271,10 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
                 result.put(BuddySqliteErrorTableKeys.Timestamp, timestamp);
                 String message = cursor.getString(cursor.getColumnIndex(BuddySqliteErrorTableKeys.Message));
                 result.put(BuddySqliteErrorTableKeys.Message, message);
+                String tag = cursor.getString(cursor.getColumnIndex(BuddySqliteErrorTableKeys.Tag));
+                result.put(BuddySqliteErrorTableKeys.Tag, tag);
+                String stackTrace = cursor.getString(cursor.getColumnIndex(BuddySqliteErrorTableKeys.Stacktrace));
+                result.put(BuddySqliteErrorTableKeys.Stacktrace, stackTrace);
             }
             else if (tableType == BuddySqliteTableType.Cellular) {
                 String uuid = cursor.getString(cursor.getColumnIndex(BuddySqliteCellularTableKeys.Uuid));

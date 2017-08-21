@@ -149,7 +149,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             deviceInfoObject.put("deviceId", deviceId);
             deviceInfoObject.put("version", configuration.get().getVersion());
         } catch (JSONException e) {
-            BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+            BuddySqliteHelper.getInstance().logError(TAG, e);
         }
 
         BuddyMetaData.uploadMetaDataInBackground("device", deviceInfoObject, new SaveCallback() {
@@ -212,7 +212,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     }
                 });
             } catch (Exception e) {
-                BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                BuddySqliteHelper.getInstance().logError(TAG, e);
             }
         }
     }
@@ -251,7 +251,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             deviceStatus.put("battery", battery);
 
         } catch (JSONException e) {
-            BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+            BuddySqliteHelper.getInstance().logError(TAG, e);
         }
 
         return deviceStatus;
@@ -285,7 +285,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
         client.newCall(request).enqueue(new Callback() {
             @Override public void onFailure(Call call, IOException e) {
-                BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                BuddySqliteHelper.getInstance().logError(TAG, e);
             }
 
             @Override public void onResponse(Call call, Response response) throws IOException {
@@ -300,7 +300,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                         configureCellularAndBatteryLogging();
 
                     } catch (JSONException e) {
-                        BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                        BuddySqliteHelper.getInstance().logError(TAG, e);
                     }
                 }
                 stopLoadingNewConfiguration();
@@ -364,7 +364,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
             }
             catch(Exception e) {
-                BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                BuddySqliteHelper.getInstance().logError(TAG, e);
             }
         }
     }
@@ -416,7 +416,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
             }
             catch(Exception e) {
-                BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                BuddySqliteHelper.getInstance().logError(TAG, e);
             }
         }
     }
@@ -615,7 +615,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 }
 
             } catch (Exception e) {
-                BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+                BuddySqliteHelper.getInstance().logError(TAG, e);
             }
         }
     }
@@ -784,7 +784,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             }
             PLog.i(TAG, "initializeLocationService: end");
         } catch (SecurityException e) {
-            BuddySqliteHelper.getInstance().logError(TAG, e.getMessage());
+            BuddySqliteHelper.getInstance().logError(TAG, e);
             PLog.w(TAG, "initializeLocationService: Missing ACCESS_FINE_LOCATION or com.google.android.gms.permission.ACTIVITY_RECOGNITION permission in the AndroidManifest");
             googleApiClient.disconnect();
         }
