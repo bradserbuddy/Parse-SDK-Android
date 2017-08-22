@@ -105,7 +105,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
             dropTable(database, BuddySqliteLocationTableKeys.TableName);
             dropTable(database, BuddySqliteCellularTableKeys.TableName);
             dropTable(database, BuddySqliteErrorTableKeys.TableName);
-
+            dropTable(database, BuddySqliteBatteryTableKeys.TableName);
             onCreate(database);
         }
         catch (Exception e) {
@@ -142,7 +142,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
         return isSuccessful;
     }
 
-    public String getStackTraceString(Exception e){
+    private String getStackTraceString(Exception e){
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
