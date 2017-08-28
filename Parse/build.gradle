@@ -65,9 +65,8 @@ dependencies {
 
     provided 'com.facebook.stetho:stetho:1.4.2'
     compile 'com.android.support:support-v4:25.3.1'
-    compile 'com.android.support:design:25.3.1'
 
-    compile 'com.mapzen.android:lost:3.0.2'
+    compile 'com.mapzen.android:lost:3.0.3'
 
     //Be aware, tests fail on 3.3.2 Wait to update until
     //java.lang.NoClassDefFoundError: android/content/pm/VersionedPackage

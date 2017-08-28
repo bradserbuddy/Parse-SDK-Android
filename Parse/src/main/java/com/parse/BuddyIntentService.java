@@ -10,11 +10,8 @@ import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationResult;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -34,8 +31,7 @@ public class BuddyIntentService extends IntentService {
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             handleDetectedActivity(result.getMostProbableActivity());
-        }
-        else {
+        } else {
             Location location = getLocation(intent);
 
             if (location != null) {
@@ -52,36 +48,34 @@ public class BuddyIntentService extends IntentService {
 
                 ContentValues contentValues = new ContentValues();
                 contentValues.put(BuddySqliteLocationTableKeys.Uuid, UUID.randomUUID().toString());
-                contentValues.put(BuddySqliteLocationTableKeys.Latitude,latitude);
-                contentValues.put(BuddySqliteLocationTableKeys.Longitude,longitude);
-                contentValues.put(BuddySqliteLocationTableKeys.Accuracy,accuracy);
-                contentValues.put(BuddySqliteLocationTableKeys.Altitude,altitude);
-                contentValues.put(BuddySqliteLocationTableKeys.Bearing,bearing);
-                contentValues.put(BuddySqliteLocationTableKeys.BearingAccuracy,bearingAccuracy);
-                contentValues.put(BuddySqliteLocationTableKeys.Speed,speed);
-                contentValues.put(BuddySqliteLocationTableKeys.SpeedAccuracy,speedAccuracyMetersPerSecond);
-                contentValues.put(BuddySqliteLocationTableKeys.VerticalAccuracy,verticalAccuracyMeters);
+                contentValues.put(BuddySqliteLocationTableKeys.Latitude, latitude);
+                contentValues.put(BuddySqliteLocationTableKeys.Longitude, longitude);
+                contentValues.put(BuddySqliteLocationTableKeys.Accuracy, accuracy);
+                contentValues.put(BuddySqliteLocationTableKeys.Altitude, altitude);
+                contentValues.put(BuddySqliteLocationTableKeys.Bearing, bearing);
+                contentValues.put(BuddySqliteLocationTableKeys.BearingAccuracy, bearingAccuracy);
+                contentValues.put(BuddySqliteLocationTableKeys.Speed, speed);
+                contentValues.put(BuddySqliteLocationTableKeys.SpeedAccuracy, speedAccuracyMetersPerSecond);
+                contentValues.put(BuddySqliteLocationTableKeys.VerticalAccuracy, verticalAccuracyMeters);
 
                 String activity = "{\"name\": \"Unknown\", \"confidence\": 0}";
                 try {
                     if (lastDetectedActivity.get() != null) {
                         activity = lastDetectedActivity.get().toString(0);
-                        contentValues.put(BuddySqliteLocationTableKeys.Activity,activity);
+                        contentValues.put(BuddySqliteLocationTableKeys.Activity, activity);
                     }
                 } catch (Exception e) {
                     BuddySqliteHelper.getInstance().logError(TAG, e);
                 }
-                BuddySqliteHelper.getInstance().save(BuddySqliteTableType.Location,contentValues);
+                BuddySqliteHelper.getInstance().save(BuddySqliteTableType.Location, contentValues);
                 PLog.i(TAG, "saved location " + latitude + " , " + longitude + ", activity = " + activity);
 
                 // save battery
                 BuddyAltDataTracker.getInstance().saveBatteryInformation();
-            } else {
-                if (intent != null && intent.getAction() != null &&
-                        intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
+            } else if (intent != null && intent.getAction() != null &&
+                    intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
 
-                    BuddyAltDataTracker.getInstance().setupServices();
-                }
+                BuddyAltDataTracker.getInstance().setup(false);
             }
         }
 

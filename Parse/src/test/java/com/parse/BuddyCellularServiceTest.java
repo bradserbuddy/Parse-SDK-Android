@@ -1,5 +1,6 @@
 package com.parse;
 
+import android.content.Context;
 import android.os.Build;
 import android.telephony.CellIdentityCdma;
 import android.telephony.CellIdentityGsm;
@@ -57,11 +58,11 @@ public class BuddyCellularServiceTest {
 
     @Test
     public void testGetGsmCellularInfoForNougat() throws Exception {
+        Context context = Mockito.mock(Context.class);
+
         // arrange
         setFinalStatic(Build.VERSION.class.getField("SDK_INT"), 25);
         setFinalStatic(Build.VERSION_CODES.class.getField("N"), 20);
-        int dataNetworkType = 100;
-        when(telephonyManager.getDataNetworkType()).thenReturn(dataNetworkType);
         List<CellInfo> cellInfos = new ArrayList<>();
         CellInfoGsm cellInfoGsm = Mockito.mock(CellInfoGsm.class);
         boolean isRegistered = true;
@@ -92,10 +93,9 @@ public class BuddyCellularServiceTest {
         when(cellIdentityGsm.getArfcn()).thenReturn(arfcn);
 
         // act
-        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(telephonyManager);
+        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(context, telephonyManager);
 
         // assert
-        assertEquals(dataNetworkType, gsmCellInfo.get("DataNetworkType"));
         JSONArray data = (JSONArray)gsmCellInfo.get("data");
         JSONObject first = (JSONObject) data.get(0);
         assertTrue((Boolean) first.get("isRegistered"));
@@ -113,11 +113,11 @@ public class BuddyCellularServiceTest {
 
     @Test
     public void testGetCdmaCellularInfoForNougat() throws Exception {
+        Context context = Mockito.mock(Context.class);
+
         // arrange
         setFinalStatic(Build.VERSION.class.getField("SDK_INT"), 25);
         setFinalStatic(Build.VERSION_CODES.class.getField("N"), 20);
-        int dataNetworkType = 100;
-        when(telephonyManager.getDataNetworkType()).thenReturn(dataNetworkType);
         List<CellInfo> cellInfos = new ArrayList<>();
         CellInfoCdma cellInfoCdma = Mockito.mock(CellInfoCdma.class);
         boolean isRegistered = true;
@@ -147,10 +147,9 @@ public class BuddyCellularServiceTest {
         when(cellIdentityCdma.getSystemId()).thenReturn(systemId);
 
         // act
-        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(telephonyManager);
+        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(context, telephonyManager);
 
         // assert
-        assertEquals(dataNetworkType, gsmCellInfo.get("DataNetworkType"));
         JSONArray data = (JSONArray)gsmCellInfo.get("data");
         JSONObject first = (JSONObject) data.get(0);
         assertTrue((Boolean) first.get("isRegistered"));
@@ -167,11 +166,11 @@ public class BuddyCellularServiceTest {
 
     @Test
     public void testGetWcdmaCellularInfoForNougat() throws Exception {
+        Context context = Mockito.mock(Context.class);
+
         // arrange
         setFinalStatic(Build.VERSION.class.getField("SDK_INT"), 25);
         setFinalStatic(Build.VERSION_CODES.class.getField("N"), 20);
-        int dataNetworkType = 100;
-        when(telephonyManager.getDataNetworkType()).thenReturn(dataNetworkType);
         List<CellInfo> cellInfos = new ArrayList<>();
         CellInfoWcdma cellInfoWcdma = Mockito.mock(CellInfoWcdma.class);
         boolean isRegistered = true;
@@ -203,10 +202,9 @@ public class BuddyCellularServiceTest {
         when(cellSignalStrengthWcdma.getDbm()).thenReturn(dbm);
 
         // act
-        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(telephonyManager);
+        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(context, telephonyManager);
 
         // assert
-        assertEquals(dataNetworkType, gsmCellInfo.get("DataNetworkType"));
         JSONArray data = (JSONArray)gsmCellInfo.get("data");
         JSONObject first = (JSONObject) data.get(0);
         assertTrue((Boolean) first.get("isRegistered"));
@@ -224,6 +222,8 @@ public class BuddyCellularServiceTest {
 
     @Test
     public void testGetCdmaCellularInfoForJellyBean() throws Exception {
+        Context context = Mockito.mock(Context.class);
+
         // arrange
         setFinalStatic(Build.VERSION.class.getField("SDK_INT"), 16);
         setFinalStatic(Build.VERSION_CODES.class.getField("N"), 20);
@@ -244,7 +244,7 @@ public class BuddyCellularServiceTest {
         when(cdmaCellLocation.getSystemId()).thenReturn(systemId);
 
         // act
-        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(telephonyManager);
+        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(context, telephonyManager);
 
         // assert
         JSONArray data = (JSONArray)gsmCellInfo.get("data");
@@ -259,6 +259,8 @@ public class BuddyCellularServiceTest {
 
     @Test
     public void testGetGsmCellularInfoForJellyBean() throws Exception {
+        Context context = Mockito.mock(Context.class);
+
         // arrange
         setFinalStatic(Build.VERSION.class.getField("SDK_INT"), 16);
         setFinalStatic(Build.VERSION_CODES.class.getField("N"), 20);
@@ -274,7 +276,7 @@ public class BuddyCellularServiceTest {
         when(gsmCellLocation.getPsc()).thenReturn(psc);
 
         // act
-        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(telephonyManager);
+        JSONObject gsmCellInfo = BuddyCellularInformation.getCellInformation(context, telephonyManager);
 
         // assert
         JSONArray data = (JSONArray)gsmCellInfo.get("data");

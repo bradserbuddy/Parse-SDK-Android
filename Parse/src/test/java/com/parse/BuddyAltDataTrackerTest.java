@@ -63,15 +63,13 @@ public class BuddyAltDataTrackerTest {
     @Test
     public void testInitialize() throws Exception {
         // arrange
-        Intent intent = Mockito.mock(Intent.class);
         when(context.getApplicationContext()).thenReturn(appContext);
 
         // act
-        BuddyAltDataTracker.getInstance().initialize(context, intent);
+        BuddyAltDataTracker.getInstance().initialize(appContext);
 
         // assert
         verify(appContext).startActivity(any(Intent.class));
-        verify(intent).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
 //    @Test
