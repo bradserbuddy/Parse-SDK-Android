@@ -9,6 +9,7 @@
 package com.parse;
 
 import android.os.Bundle;
+import android.provider.Settings;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -111,7 +112,7 @@ public class ParseClientConfigurationTest {
     when(metaData.getString(PARSE_SERVER_URL)).thenReturn(serverUrl);
     when(metaData.getString(PARSE_APPLICATION_ID)).thenReturn(appId);
     when(metaData.getString(PARSE_CLIENT_KEY)).thenReturn(null);
-
+    Settings.Secure.putString(RuntimeEnvironment.application.getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID, "54321");
     Parse.initialize(RuntimeEnvironment.application);
     assertEquals(new URL(serverUrl + "/"), ParseRESTCommand.server);
     assertEquals(appId, ParsePlugins.get().applicationId());
