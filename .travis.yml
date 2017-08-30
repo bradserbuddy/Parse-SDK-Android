@@ -1,6 +1,6 @@
 branches:
   only:
-    - master
+    - buddy
     - /^\d+\.\d+\.\d+$/ # regex
     - travis1
 
@@ -42,5 +42,5 @@ deploy:
   skip_cleanup: true
   on:
     all_branches: true
-#   branch: master
-    tags: false
+    branch: buddy
+    tags: true
