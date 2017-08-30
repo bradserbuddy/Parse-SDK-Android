@@ -1,6 +1,7 @@
 branches:
   only:
-    - master
+    - buddy
+    - /^\d+\.\d+\.\d+$/ # regex
 
 language: android
 sudo: false
@@ -23,9 +24,9 @@ script:
   - ./gradlew clean testDebugUnitTest jacocoTestReport --info
 
 after_success:
-  - ./gradlew coveralls
+#  - ./gradlew coveralls
   - codecov
-  - ./scripts/publish_snapshot.sh
+# - ./scripts/publish_snapshot.sh
 
 cache:
   directories:
@@ -37,5 +38,5 @@ deploy:
   script: ./gradlew bintrayUpload
   skip_cleanup: true
   on:
-    branch: master
+    branch: buddy
     tags: true
