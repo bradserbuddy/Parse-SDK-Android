@@ -35,14 +35,29 @@ public class BuddyLocationRequestPermissionActivity extends AppCompatActivity
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             BuddyAltDataTracker.getInstance().setup(false);
+
+            this.finish();
         } else {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
-                this.showDialog();
+                this.showRationaleDialog();
             } else {
                 this.requestPermissions();
             }
         }
+    }
+
+    private void showRationaleDialog() {
+        (new AlertDialog.Builder(this))
+                .setMessage(R.string.request_location_permission_rationale)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        requestPermissions();
+                    }
+                })
+                .create()
+                .show();
     }
 
     public void requestPermissions() {
@@ -60,18 +75,7 @@ public class BuddyLocationRequestPermissionActivity extends AppCompatActivity
         if (requestCode == PERMISSION_REQUEST_CODE) {
             BuddyAltDataTracker.getInstance().setup(true);
         }
-    }
 
-    private void showDialog() {
-        (new AlertDialog.Builder(this))
-            .setMessage(R.string.request_location_permission_rationale)
-            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    requestPermissions();
-                }
-            })
-            .create()
-            .show();
+        this.finish();
     }
 }
