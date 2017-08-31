@@ -2,8 +2,10 @@ package com.parse;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.Build;
 
+import org.apache.commons.cli.MissingArgumentException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -124,7 +126,7 @@ public class BuddyPreferences {
             }
         }
         else {
-            BuddySqliteHelper.getInstance().logError(TAG, new Exception("missing " + key + " remote config"));
+            BuddySqliteHelper.getInstance().logError(TAG, new Resources.NotFoundException("missing " + key + " remote config"));
         }
 
         return result;
@@ -141,7 +143,7 @@ public class BuddyPreferences {
             }
         }
         else {
-            BuddySqliteHelper.getInstance().logError(TAG, new Exception("missing " + key + " remote config"));
+            BuddySqliteHelper.getInstance().logError(TAG, new Resources.NotFoundException("missing " + key + " remote config"));
         }
 
         return result;
