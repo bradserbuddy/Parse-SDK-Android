@@ -123,7 +123,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     }
 
     public void saveCellularInformation() {
-        if (uploadCriteria.getHasEnoughBattery(context)) {
+        if (configuration.get().shouldLogCellular() && uploadCriteria.getHasEnoughBattery(context)) {
             BuddyCellularInformation.save(context);
         }
     }
