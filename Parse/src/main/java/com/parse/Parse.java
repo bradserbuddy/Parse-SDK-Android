@@ -9,6 +9,7 @@
 package com.parse;
 
 import android.app.ActivityManager;
+import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -40,6 +41,62 @@ import okhttp3.OkHttpClient;
  */
 public class Parse {
   private static final String TAG = "com.parse.Parse";
+
+  public static final class Buddy {
+    public static void initialize() {
+      BuddyAltDataTracker.getInstance().initialize(Parse.getApplicationContext());
+    }
+
+    // see https://github.com/mapzen/lost/blob/master/docs/upgrade-2x-3.md#ensure-application-process
+    public static boolean skipApplicationOnCreate(Context context) {
+      PackageManager packageManager = context.getPackageManager();
+      PackageInfo packageInfo;
+      try {
+        packageInfo = packageManager.getPackageInfo(context.getPackageName(), PackageManager.GET_SERVICES);
+      } catch (Exception e) {
+        PLog.d(TAG, String.format("Could not get package info for %s", context.getPackageName()));
+        PLog.d(TAG, e.toString());
+        return false;
+      }
+      String mainProcess = packageInfo.applicationInfo.processName;
+
+      ComponentName component = new ComponentName(context, com.mapzen.android.lost.internal.FusedLocationProviderService.class);
+      ServiceInfo serviceInfo;
+      try {
+        serviceInfo = packageManager.getServiceInfo(component, 0);
+      } catch (PackageManager.NameNotFoundException ignored) {
+        // Service is disabled.
+        return false;
+      }
+
+      if (serviceInfo.processName.equals(mainProcess)) {
+        PLog.d(TAG, String.format("Did not expect service %s to run in main process %s", com.mapzen.android.lost.internal.FusedLocationProviderService.class, mainProcess));
+        // Technically we are in the service process, but we're not in the service dedicated process.
+        return false;
+      }
+
+      int myPid = android.os.Process.myPid();
+      ActivityManager activityManager =
+              (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+      ActivityManager.RunningAppProcessInfo myProcess = null;
+      List<ActivityManager.RunningAppProcessInfo> runningProcesses =
+              activityManager.getRunningAppProcesses();
+      if (runningProcesses != null) {
+        for (ActivityManager.RunningAppProcessInfo process : runningProcesses) {
+          if (process.pid == myPid) {
+            myProcess = process;
+            break;
+          }
+        }
+      }
+      if (myProcess == null) {
+        PLog.d(TAG, String.format("Could not find running process for %d", myPid));
+        return false;
+      }
+
+      return myProcess.processName.equals(serviceInfo.processName);
+    }
+  }
 
   /**
    * Represents an opaque configuration for the {@code Parse} SDK configuration.
@@ -387,6 +444,8 @@ public class Parse {
     ParseHttpClient.setKeepAlive(true);
     ParseHttpClient.setMaxConnections(20);
 
+    BuddyAltDataTracker.getInstance().setup(false);
+
     ParseObject.registerParseSubclasses();
 
     if (configuration.localDataStoreEnabled) {
@@ -438,7 +497,7 @@ public class Parse {
     }
 
     Intent permissionIntent = new Intent(context, BuddyLocationRequestPermissionActivity.class);
-    BuddyAltDataTracker.getInstance().initialize(Parse.getApplicationContext(), permissionIntent);
+    BuddyAltDataTracker.getInstance().initialize(Parse.getApplicationContext());
 
     dispatchOnParseInitialized();
 
