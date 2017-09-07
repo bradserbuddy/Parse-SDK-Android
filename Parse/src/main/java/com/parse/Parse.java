@@ -496,9 +496,6 @@ public class Parse {
       PushService.startServiceIfRequired(applicationContext);
     }
 
-    Intent permissionIntent = new Intent(context, BuddyLocationRequestPermissionActivity.class);
-    BuddyAltDataTracker.getInstance().initialize(Parse.getApplicationContext());
-
     dispatchOnParseInitialized();
 
     // FYI we probably don't want to do this if we ever add other callbacks.
