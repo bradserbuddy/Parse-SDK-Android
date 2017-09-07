@@ -83,14 +83,17 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     private void uploadApplicationsList() {
         JSONObject applicationsObject =  BuddyApplication.getAppNames(context,configuration.get().getVersion(), getDeviceId());
         if (applicationsObject != null && applicationsObject.has("apps")) {
+            uploadCriteria.startUpload();
             BuddyMetaData.uploadMetaDataInBackground("apps", applicationsObject, new SaveCallback() {
                 @Override
                 public void done(ParseException e) {
                     if (e == null) {
                         // success
                         PLog.i(TAG, "apps data uploaded");
+                        uploadCompleted();
                     } else {
                         PLog.i(TAG, "apps data upload failed");
+                        uploadCompleted();
                         handleUploadError(e);
                     }
                 }
@@ -126,6 +129,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
     private void uploadDeviceInformation() {
         JSONObject deviceInfoObject = new JSONObject();
+        uploadCriteria.startUpload();
 
         try {
             BigInteger deviceId = getDeviceId();
@@ -154,8 +158,10 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             if (e == null) {
                 // success
                 PLog.i(TAG, "device data uploaded");
+                uploadCompleted();
             } else {
                 PLog.i(TAG, "device data upload failed");
+                uploadCompleted();
                 handleUploadError(e);
             }
             }
@@ -574,6 +580,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             try {
                 final JSONArray items = (JSONArray) errors.get("items");
                 if (items.length() > 0) {
+                    uploadCriteria.startUpload();
                     final String[] ids = (String[]) errors.get("ids");
                     JSONObject parametersObject = new JSONObject();
                     parametersObject.put("errors", items);
@@ -592,9 +599,11 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
                             if (items.length() == rowsAffected) {
                                 PLog.i(TAG, "errors deleted");
+                                uploadCompleted();
                             }
                         } else {
                             PLog.i(TAG, "errors upload failed");
+                            uploadCompleted();
                             handleUploadError(e);
                         }
                         }
@@ -610,6 +619,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     private final static AtomicBoolean setupComplete = new AtomicBoolean();
 
     void setup(boolean permissionsChecked) {
+//        uploadCriteria.clearJobsCount();
+
         if (setupComplete.compareAndSet(false, true)) {
             PLog.i(TAG, "setup");
 
@@ -627,6 +638,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
             setupEvents();
         } else if (permissionsChecked) {
+
             configureLoggingRequiringPermissions();
         }
     }
