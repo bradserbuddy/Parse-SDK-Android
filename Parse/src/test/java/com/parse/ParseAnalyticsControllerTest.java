@@ -60,7 +60,7 @@ public class ParseAnalyticsControllerTest {
 
   //endregion
 
-  //region uploadMetaDataInBackground
+  //region trackEventInBackground
 
   @Test
   public void testTrackEvent() throws Exception {

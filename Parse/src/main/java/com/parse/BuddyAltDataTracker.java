@@ -686,11 +686,15 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
 
     private void startApiClient() {
         if (lostApiClient == null) {
+            if (googleApiClient.isConnected())
+                googleApiClient.disconnect();
             googleApiClient.connect();
             PLog.i(TAG, "googleApiClient: connecting to services");
         }
         else
         {
+            if (lostApiClient.isConnected())
+                lostApiClient.disconnect();
             lostApiClient.connect();
             PLog.i(TAG, "lostApiClient: connecting to services");
         }
