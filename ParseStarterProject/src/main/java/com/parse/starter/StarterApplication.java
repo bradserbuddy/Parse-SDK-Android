@@ -12,6 +12,7 @@ import android.app.Application;
 
 import com.parse.Parse;
 import com.parse.ParseACL;
+import com.parse.ParseInstallation;
 import com.parse.ParseUser;
 
 
@@ -21,16 +22,27 @@ public class StarterApplication extends Application {
   public void onCreate() {
     super.onCreate();
 
+    if (Parse.Buddy.skipApplicationOnCreate(this)) {
+      return;
+    }
+
+    Parse.setLogLevel(Parse.LOG_LEVEL_DEBUG);
     // Enable Local Datastore.
     Parse.enableLocalDatastore(this);
 
-    // Add your initialization code here
-    Parse.initialize(this);
+    Parse.initialize(new Parse.Configuration.Builder(this)
+            .applicationId("Parse on Buddy AppId goes here")
+            .server("https://api.parse.buddy.com/parse/")
+            .build());
+    //ParseFacebookUtils.initialize(getApplicationContext());
 
-    ParseUser.enableAutomaticUser();
+    //ParseUser.enableAutomaticUser();
     ParseACL defaultACL = new ParseACL();
     // Optionally enable public read access.
     // defaultACL.setPublicReadAccess(true);
     ParseACL.setDefaultACL(defaultACL, true);
+
+    ParseInstallation.getCurrentInstallation().saveInBackground();
+
   }
 }

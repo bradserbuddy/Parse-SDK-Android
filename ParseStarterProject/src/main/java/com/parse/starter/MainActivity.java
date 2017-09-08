@@ -11,16 +11,19 @@ package com.parse.starter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
+import com.parse.Parse;
 import com.parse.ParseAnalytics;
 
 
-public class MainActivity extends android.support.v4.app.FragmentActivity {
+public class MainActivity extends AppCompatActivity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
+    Parse.Buddy.initialize();
     ParseAnalytics.trackAppOpenedInBackground(getIntent());
+
   }
 }
