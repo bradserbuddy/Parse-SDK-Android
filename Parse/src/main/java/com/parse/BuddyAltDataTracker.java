@@ -619,8 +619,6 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     private final static AtomicBoolean setupComplete = new AtomicBoolean();
 
     void setup(boolean permissionsChecked) {
-//        uploadCriteria.clearJobsCount();
-
         if (setupComplete.compareAndSet(false, true)) {
             PLog.i(TAG, "setup");
 

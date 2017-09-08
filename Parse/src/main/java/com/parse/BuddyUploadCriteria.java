@@ -69,13 +69,6 @@ class BuddyUploadCriteria {
         powerStatus = status;
     }
 
-//    public void clearJobsCount() {
-//        if (uploadJobsCount > 0) {
-//            uploadJobsCount = 0;
-//        }
-//        PLog.i(TAG, String.format("Jobs Count %d", uploadJobsCount));
-//    }
-
     public boolean canUpload(Context context, BuddyConfiguration configuration) {
         boolean result = false;
         BuddyConnectivityStatus connectivityStatus = getConnectivityStatus();
