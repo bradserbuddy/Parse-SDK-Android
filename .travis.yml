@@ -28,7 +28,7 @@ before_install:
 #    - mvn validate
 
 script:
-  - ./gradlew clean testDebugUnitTest jacocoTestReport
+  - ./gradlew clean testDebugUnitTest jacocoTestReport --stacktrace
 
 after_success:
 #  - ./gradlew coveralls
