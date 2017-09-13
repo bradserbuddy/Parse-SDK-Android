@@ -21,13 +21,19 @@ class BuddyUploadCriteria {
     }
 
     public int getBatteryPercentage(Context context) {
+        int percentage = 0;
+
         IntentFilter batteryIntentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = context.registerReceiver(null, batteryIntentFilter);
 
-        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, 1);
+        if (batteryStatus != null) {
+            int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+            int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, 1);
 
-        return Math.round((level / (float)scale) * 100);
+            percentage = Math.round((level / (float)scale) * 100);
+        }
+
+        return percentage;
     }
 
     public void setHasEnoughBattery(String intentAction) {
