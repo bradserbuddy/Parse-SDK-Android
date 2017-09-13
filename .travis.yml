@@ -25,10 +25,12 @@ android:
 before_install:
     - pip install --user codecov
     - wget -P ./Parse/lib/ https://parseonbuddy.blob.core.windows.net/ppns/ppns-android-1.0.jar
+    - export TZ=Etc/UTC
+
 #    - mvn validate
 
 script:
-  - ./gradlew clean testDebugUnitTest jacocoTestReport --stacktrace --debug
+  - ./gradlew clean testDebugUnitTest jacocoTestReport
 
 after_success:
 #  - ./gradlew coveralls
