@@ -80,7 +80,7 @@ public class ParseAnalyticsTest {
     assertSame(controller, ParseAnalytics.getAnalyticsController());
   }
 
-   //region trackEventInBackground
+  //region trackEventInBackground
 
   @Test(expected = IllegalArgumentException.class)
   public void testTrackEventInBackgroundNullName() throws Exception {
