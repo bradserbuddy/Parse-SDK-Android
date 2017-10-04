@@ -21,7 +21,7 @@ For more information about Parse and its features, see [the website][parseplatfo
 
   ```groovy
   dependencies {
-    compile 'com.parse:parse-android:1.16.0'
+    compile 'com.buddy.parse:parse-android:1.16.2'
   }
   ```
 
@@ -39,23 +39,7 @@ For more information about Parse and its features, see [the website][parseplatfo
   You can link to your project to your AAR file as you please.
     
  ### Setup
-- **Option 1:** Setup in the Manifest
 
-  You may define `com.parse.SERVER_URL` and `com.parse.APPLICATION_ID` meta-data in your `AndroidManifest.xml`:
-
-  ```xml
-  <application ...>
-    <meta-data
-      android:name="com.parse.SERVER_URL"
-      android:value="@string/parse_server_url" />
-    <meta-data
-      android:name="com.parse.APPLICATION_ID"
-      android:value="@string/parse_app_id" />
-    ...
-  </application>
-  ```
-  
-- **Option 2:** Setup in the Application
   
   Initialize Parse in a custom class that extends `Application`:
   
@@ -67,6 +51,7 @@ For more information about Parse and its features, see [the website][parseplatfo
     @Override
     public void onCreate() {
       super.onCreate();
+      if (Parse.Buddy.skipApplicationOnCreate(this)) return;
       Parse.initialize(new Parse.Configuration.Builder(this)
         .applicationId("YOUR_APP_ID")
         .server("http://localhost:1337/parse/")
@@ -76,7 +61,7 @@ For more information about Parse and its features, see [the website][parseplatfo
   }
   ```
   
- For either option, the custom `Application` class must be registered in `AndroidManifest.xml`:
+The custom `Application` class must be registered in `AndroidManifest.xml`:
  
  ```xml
  <application
@@ -85,6 +70,22 @@ For more information about Parse and its features, see [the website][parseplatfo
    ...
  </application>
  ```
+
+  Additionally, initialize Parse on Buddy in your main activity that extends `Activity`:
+
+  ```java
+  import com.parse.Parse;
+  import android.app.Activity;
+
+  public class MainActivity extends Activity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+      super.onCreate(savedInstanceState);
+      Parse.Buddy.initialize();
+    }
+  }
+  ```
+  The main activity should be assigned the `android.intent.action.MAIN` action in `AndroidManifest.xml`.
 
 ## Usage
 Everything can done through the supplied gradle wrapper:
