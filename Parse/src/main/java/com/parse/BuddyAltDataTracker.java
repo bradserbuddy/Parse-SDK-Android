@@ -147,6 +147,9 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             deviceInfoObject.put("sdkVersionRelease", Build.VERSION.RELEASE);
             deviceInfoObject.put("sdkVersionNumber", Build.VERSION.SDK_INT);
             deviceInfoObject.put("deviceId", deviceId);
+            deviceInfoObject.put("DeviceInfoPlatformOs", "Android");
+            deviceInfoObject.put("DeviceFamily", "phone");
+            deviceInfoObject.put("requestID", UUID.randomUUID().toString());
             deviceInfoObject.put("version", configuration.get().getVersion());
         } catch (JSONException e) {
             BuddySqliteHelper.getInstance().logError(TAG, e);
@@ -183,6 +186,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 parametersObject.put("locations", items);
                 BigInteger deviceId = getDeviceId();
                 parametersObject.put("deviceId", deviceId);
+                parametersObject.put("requestID", UUID.randomUUID().toString());
                 parametersObject.put("device_status", deviceStatus);
                 parametersObject.put("version", configuration.get().getVersion());
 
@@ -322,6 +326,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 JSONObject parametersObject = new JSONObject();
                 BigInteger deviceId = getDeviceId();
                 parametersObject.put("deviceId", deviceId);
+                parametersObject.put("requestID", UUID.randomUUID().toString());
                 parametersObject.put("cellular", items);
                 parametersObject.put("version", configuration.get().getVersion());
 
@@ -374,6 +379,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 JSONObject parametersObject = new JSONObject();
                 BigInteger deviceId = getDeviceId();
                 parametersObject.put("deviceId", deviceId);
+                parametersObject.put("requestID", UUID.randomUUID().toString());
                 parametersObject.put("battery", items);
                 parametersObject.put("version", configuration.get().getVersion());
 
@@ -586,6 +592,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     parametersObject.put("errors", items);
                     BigInteger deviceId = getDeviceId();
                     parametersObject.put("deviceId", deviceId);
+                    parametersObject.put("requestID", UUID.randomUUID().toString());
                     parametersObject.put("version", configuration.get().getVersion());
 
                     BuddyMetaData.uploadMetaDataInBackground("error", parametersObject, new SaveCallback() {

@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class BuddyApplication {
 
@@ -35,6 +36,7 @@ public class BuddyApplication {
             try {
                 applicationsObject.put("apps", new JSONArray(appNames));
                 applicationsObject.put("deviceId", deviceId);
+                applicationsObject.put("RequestID", UUID.randomUUID().toString());
                 applicationsObject.put("version", version);
             } catch (JSONException e) {
                 BuddySqliteHelper.getInstance().logError(BuddyAltDataTracker.TAG, e);

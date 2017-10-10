@@ -23,6 +23,7 @@ import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.TelephonyManager;
 import android.telephony.cdma.CdmaCellLocation;
 import android.telephony.gsm.GsmCellLocation;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -48,7 +49,7 @@ public class BuddyCellularInformation {
                     == PackageManager.PERMISSION_GRANTED) {
                 JSONArray cellInformationArray = new JSONArray();
 
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
 
                     List<CellInfo> allCellInfo = telephonyManager.getAllCellInfo();
 
@@ -68,6 +69,12 @@ public class BuddyCellularInformation {
                                 cellularInfoObject.put("mobileCountryCode", identityGSM.getMcc());
                                 cellularInfoObject.put("locationAreaCode", identityGSM.getLac());
                                 cellularInfoObject.put("mobileNetworkCode", identityGSM.getMnc());
+                                cellularInfoObject.put("psc", identityGSM.getPsc());
+
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    cellularInfoObject.put("arfcn", identityGSM.getArfcn());
+                                    cellularInfoObject.put("bsic", identityGSM.getBsic());
+                                }
 
                                 cellularInfoObject.put("asuLevel", signalStrengthGsm.getAsuLevel());
                                 cellularInfoObject.put("signalStrengthDbm", signalStrengthGsm.getDbm());
@@ -91,6 +98,15 @@ public class BuddyCellularInformation {
                                 cellularInfoObject.put("asuLevel", signalStrengthCdma.getAsuLevel());
                                 cellularInfoObject.put("signalStrengthDbm", signalStrengthCdma.getDbm());
                                 cellularInfoObject.put("signalLevel", signalStrengthCdma.getLevel());
+
+                                cellularInfoObject.put("cdmaLevel", signalStrengthCdma.getCdmaLevel());
+                                cellularInfoObject.put("evdoLevel", signalStrengthCdma.getEvdoLevel());
+                                cellularInfoObject.put("dbm", signalStrengthCdma.getDbm());
+                                cellularInfoObject.put("cdmaDbm", signalStrengthCdma.getCdmaDbm());
+                                cellularInfoObject.put("cdmaEcio", signalStrengthCdma.getCdmaEcio());
+                                cellularInfoObject.put("evdoDbm", signalStrengthCdma.getEvdoDbm());
+                                cellularInfoObject.put("evdoEcio", signalStrengthCdma.getEvdoEcio());
+                                cellularInfoObject.put("evdoSnr", signalStrengthCdma.getEvdoSnr());
                             } else if (cellInfo instanceof CellInfoWcdma) {
                                 //PLog.i(TAG, "WCDMA network");
                                 CellInfoWcdma cellInfoWcdma = (CellInfoWcdma) cellInfo;
@@ -133,6 +149,13 @@ public class BuddyCellularInformation {
                                 cellularInfoObject.put("signalStrengthDbm", signalStrengthLte.getDbm());
                                 cellularInfoObject.put("signalLevel", signalStrengthLte.getLevel());
                                 cellularInfoObject.put("timingAdvance", signalStrengthLte.getTimingAdvance());
+
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    cellularInfoObject.put("rsrq", signalStrengthLte.getRsrq());
+                                    cellularInfoObject.put("rssnr", signalStrengthLte.getRssnr());
+                                    cellularInfoObject.put("rsrp", signalStrengthLte.getRsrp());
+                                    cellularInfoObject.put("cqi", signalStrengthLte.getCqi());
+                                }
                             }
 
                             if (cellularInfoObject.length() > 0) {
@@ -168,6 +191,46 @@ public class BuddyCellularInformation {
                 }
 
                 cellInformation.put("data", cellInformationArray);
+                // extra fields
+                cellInformation.put("callState", telephonyManager.getCallState());
+                cellInformation.put("dataActivity", telephonyManager.getDataActivity());
+                cellInformation.put("dataState", telephonyManager.getDataState());
+                cellInformation.put("getNetworkCountryIso", telephonyManager.getNetworkCountryIso());
+                cellInformation.put("networkOperator", telephonyManager.getNetworkOperator()); // mobile country code + mobile network code http://www.mcc-mnc.com/
+                cellInformation.put("networkOperatorName", telephonyManager.getNetworkOperatorName());
+                cellInformation.put("getNetworkType", telephonyManager.getNetworkType());
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    cellInformation.put("phoneCount", telephonyManager.getPhoneCount());
+                }
+                cellInformation.put("phoneType", telephonyManager.getPhoneType());
+                cellInformation.put("simCountryIso", telephonyManager.getSimCountryIso());
+                cellInformation.put("simOperator", telephonyManager.getSimOperator());
+                cellInformation.put("simOperatorName", telephonyManager.getSimOperatorName());
+                cellInformation.put("simState", telephonyManager.getSimState());
+                cellInformation.put("hasIccCard", telephonyManager.hasIccCard());
+                cellInformation.put("isNetworkRoaming", telephonyManager.isNetworkRoaming());
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    cellInformation.put("mmsUAProfUrl", telephonyManager.getMmsUAProfUrl());
+                    cellInformation.put("mmsUserAgent", telephonyManager.getMmsUserAgent());
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    cellInformation.put("smsCapable", telephonyManager.isSmsCapable());
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                    cellInformation.put("hasCarrierPrivileges", telephonyManager.hasCarrierPrivileges());
+                    cellInformation.put("isVoiceCapable", telephonyManager.isVoiceCapable());
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    cellInformation.put("isConcurrentVoiceAndDataSupported", telephonyManager.isConcurrentVoiceAndDataSupported());
+                    cellInformation.put("networkSpecifier", telephonyManager.getNetworkSpecifier());
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    cellInformation.put("isHearingAidCompatibilitySupported", telephonyManager.isHearingAidCompatibilitySupported());
+                    cellInformation.put("isTtyModeSupported", telephonyManager.isTtyModeSupported());
+                }
             }
         }
         catch (Exception e) {

@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
+import android.text.format.DateFormat;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,9 +15,12 @@ import org.json.JSONObject;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.UUID;
 
 
@@ -257,6 +261,14 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
 
         return result;
     }
+    private String epochTo8601(long epoch) {
+        Date date = new Date(epoch*1000);
+        TimeZone tz = TimeZone.getTimeZone("UTC");
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
+        df.setTimeZone(tz);
+        String isoDate = df.format(date);
+        return isoDate;
+    }
 
     private JSONObject toJSON(BuddySqliteTableType tableType, Cursor cursor) {
         JSONObject result = null;
@@ -268,7 +280,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
                 String uuid = cursor.getString(cursor.getColumnIndex(BuddySqliteErrorTableKeys.Uuid));
                 result.put(BuddySqliteErrorTableKeys.Uuid, uuid);
                 long timestamp = cursor.getLong(cursor.getColumnIndex(BuddySqliteErrorTableKeys.Timestamp));
-                result.put(BuddySqliteErrorTableKeys.Timestamp, timestamp);
+                result.put(BuddySqliteErrorTableKeys.Timestamp, epochTo8601(timestamp));
                 String message = cursor.getString(cursor.getColumnIndex(BuddySqliteErrorTableKeys.Message));
                 result.put(BuddySqliteErrorTableKeys.Message, message);
                 String tag = cursor.getString(cursor.getColumnIndex(BuddySqliteErrorTableKeys.Tag));
@@ -280,7 +292,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
                 String uuid = cursor.getString(cursor.getColumnIndex(BuddySqliteCellularTableKeys.Uuid));
                 result.put(BuddySqliteCellularTableKeys.Uuid, uuid);
                 long timestamp = cursor.getLong(cursor.getColumnIndex(BuddySqliteCellularTableKeys.Timestamp));
-                result.put(BuddySqliteCellularTableKeys.Timestamp, timestamp);
+                result.put(BuddySqliteCellularTableKeys.Timestamp, epochTo8601(timestamp));
                 String body = cursor.getString(cursor.getColumnIndex(BuddySqliteCellularTableKeys.Body));
                 JSONObject cellInfo = new JSONObject(body);
                 result.put("cellInfo", cellInfo);
@@ -289,7 +301,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
                 String uuid = cursor.getString(cursor.getColumnIndex(BuddySqliteLocationTableKeys.Uuid));
                 result.put(BuddySqliteLocationTableKeys.Uuid,uuid);
                 long timestamp = cursor.getLong(cursor.getColumnIndex(BuddySqliteLocationTableKeys.Timestamp));
-                result.put(BuddySqliteLocationTableKeys.Timestamp,timestamp);
+                result.put(BuddySqliteLocationTableKeys.Timestamp,epochTo8601(timestamp));
                 double latitude = cursor.getDouble(cursor.getColumnIndex(BuddySqliteLocationTableKeys.Latitude));
                 result.put(BuddySqliteLocationTableKeys.Latitude,latitude);
                 double longitude = cursor.getDouble(cursor.getColumnIndex(BuddySqliteLocationTableKeys.Longitude));
@@ -319,7 +331,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
                 String uuid = cursor.getString(cursor.getColumnIndex(BuddySqliteBatteryTableKeys.Uuid));
                 result.put(BuddySqliteBatteryTableKeys.Uuid, uuid);
                 long timestamp = cursor.getLong(cursor.getColumnIndex(BuddySqliteBatteryTableKeys.Timestamp));
-                result.put(BuddySqliteBatteryTableKeys.Timestamp, timestamp);
+                result.put(BuddySqliteBatteryTableKeys.Timestamp, epochTo8601(timestamp));
                 int level = cursor.getInt(cursor.getColumnIndex(BuddySqliteBatteryTableKeys.Level));
                 result.put("percentage", level);
             }
