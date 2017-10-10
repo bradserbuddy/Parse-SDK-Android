@@ -33,6 +33,7 @@ public class BuddyPreferences {
     private static final boolean shouldLogBatteryDefault = true;
     private static final boolean shouldUploadBatteryDefault = true;
     private static final long batteryLogTimeoutMsDefault = 60000;
+    private static final long uploadTimeoutMinutesDefault = 360;
 
     public static BuddyConfiguration getConfig(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(BuddyPreferenceKeys.preferenceBuddyLocationTracker, 0);
@@ -54,7 +55,7 @@ public class BuddyPreferences {
         configuration.setCommonCellularPushBatchSize(cellularBatchSize == 0 ? cellularBatchSizeDefault : cellularBatchSize);
 
         long cellularLogTimeout = sharedPreferences.getLong(BuddyPreferenceKeys.preferenceConfigCellularLogTimeoutMs, 0);
-        configuration.setAndroidCellularLogTimeout(cellularLogTimeout == 0 ? cellularLogTimeoutMsDefault : cellularLogTimeout);
+        configuration.setAndroidCellularLogTimeoutMs(cellularLogTimeout == 0 ? cellularLogTimeoutMsDefault : cellularLogTimeout);
 
         long locationPowerAccuracy = sharedPreferences.getLong(BuddyPreferenceKeys.preferenceConfigLocationPowerAccuracy, 0);
         configuration.setAndroidLocationPowerAccuracy(locationPowerAccuracy == 0 ? locationPowerAccuracyDefault : locationPowerAccuracy);
@@ -103,6 +104,9 @@ public class BuddyPreferences {
 
         long batteryLogTimeoutMs = sharedPreferences.getLong(BuddyPreferenceKeys.preferenceConfigBatteryLogTimeoutMs, 0);
         configuration.setAndroidBatteryLogTimeoutMs(batteryLogTimeoutMs == 0 ? batteryLogTimeoutMsDefault : batteryLogTimeoutMs);
+
+        long uploadTimeoutMinutes = sharedPreferences.getLong(BuddyPreferenceKeys.preferenceConfigUploadTimeoutMinutes, 0);
+        configuration.setAndroidUploadTimeoutMinutes(uploadTimeoutMinutes == 0 ? uploadTimeoutMinutesDefault : uploadTimeoutMinutes);
 
         return configuration;
     }
@@ -192,6 +196,7 @@ public class BuddyPreferences {
                     long activityMonitoringTimeout = getValueWithDefault(usedConfig, BuddyPreferenceKeys.preferenceConfigActivityMonitorLogTimeoutMs, activityMonitoringTimeoutMsDefault);
                     long cellularLogTimeout = getValueWithDefault(usedConfig, BuddyPreferenceKeys.preferenceConfigCellularLogTimeoutMs, cellularLogTimeoutMsDefault);
                     long batteryLogTimeout = getValueWithDefault(usedConfig, BuddyPreferenceKeys.preferenceConfigBatteryLogTimeoutMs, batteryLogTimeoutMsDefault);
+                    long uploadTimeout = getValueWithDefault(usedConfig, BuddyPreferenceKeys.preferenceConfigUploadTimeoutMinutes, uploadTimeoutMinutesDefault);
 
                     SharedPreferences sharedPreferences = context.getSharedPreferences(BuddyPreferenceKeys.preferenceBuddyLocationTracker, 0);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -216,13 +221,14 @@ public class BuddyPreferences {
                     editor.putLong(BuddyPreferenceKeys.preferenceConfigMaxRecordsToDelete, maxRecordsToDelete);
                     editor.putLong(BuddyPreferenceKeys.preferenceConfigActivityMonitorLogTimeoutMs, activityMonitoringTimeout);
                     editor.putLong(BuddyPreferenceKeys.preferenceConfigBatteryLogTimeoutMs, batteryLogTimeout);
+                    editor.putLong(BuddyPreferenceKeys.preferenceConfigUploadTimeoutMinutes, uploadTimeout);
                     editor.apply();
 
                     savedConfig.setVersion(version);
                     savedConfig.setCommonLocationPushBatchSize(locationPushBatch);
                     savedConfig.setCommonCellularPushBatchSize(cellularPushBatch);
                     savedConfig.setCommonBatteryPushBatchSize(batteryPushBatch);
-                    savedConfig.setAndroidCellularLogTimeout(cellularLogTimeout);
+                    savedConfig.setAndroidCellularLogTimeoutMs(cellularLogTimeout);
                     savedConfig.setCommonMaxLocationRecords(locationsMaxRecords);
                     savedConfig.setCommonMaxCellularRecords(cellularMaxRecords);
                     savedConfig.setCommonMaxBatteryRecords(batteryMaxRecords);
@@ -239,6 +245,7 @@ public class BuddyPreferences {
                     savedConfig.setUploadCellular(shouldUploadCellular);
                     savedConfig.setUploadLocation(shouldUploadLocation);
                     savedConfig.setUploadBattery(shouldUploadBattery);
+                    savedConfig.setAndroidUploadTimeoutMinutes(uploadTimeout);
                 }
             }
         } catch (Exception e) {

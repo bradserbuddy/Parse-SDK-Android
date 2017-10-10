@@ -30,6 +30,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
@@ -56,7 +57,7 @@ import okhttp3.Response;
 
 class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostApiClient.ConnectionCallbacks {
     public static final String TAG = "com.parse.BuddyAltDataTracker";
-    private Timer logTimer;
+    private Timer timer;
     private static BuddyUploadCriteria uploadCriteria = new BuddyUploadCriteria();
     private static GoogleApiClient googleApiClient;
     private static LostApiClient lostApiClient;
@@ -101,24 +102,36 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         }
     }
 
-    private void stopLogTimer() {
-        if (logTimer != null) {
-            logTimer.cancel();
-            PLog.i(TAG, "log timer disabled");
+    private void stopTimer() {
+        if (timer != null) {
+            timer.cancel();
+            PLog.i(TAG, "timer disabled");
         }
     }
-    private void startLogTimer() {
-        stopLogTimer();
+    private void startTimer() {
+        stopTimer();
 
-        logTimer = new Timer();
-        logTimer.schedule(new TimerTask() {
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                saveCellularInformation();
-                saveBatteryInformation();
+                SimpleDateFormat s = new SimpleDateFormat("hh:mm:ss");
+                String format = s.format(new Date());
+                PLog.i(TAG, "timer expired " + format);
+
+                if (configuration.get().shouldLogCellular()) {
+                    saveCellularInformation();
+                }
+
+                if (configuration.get().shouldLogBattery()) {
+                    saveBatteryInformation();
+                }
+
+                // check upload condition all the time
+                upload(true);
             }
-        }, 0, configuration.get().getAndroidLogTimeout());
-        PLog.i(TAG, "log timer enabled");
+        }, 0, configuration.get().getAndroidTimeout());
+        PLog.i(TAG, "timer enabled");
     }
 
     public void saveCellularInformation() {
@@ -514,7 +527,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         saveCellularInformation();
         saveBatteryInformation();
 
-        upload();
+        upload(false);
     }
 
     public void saveBatteryInformation() {
@@ -524,8 +537,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         }
     }
 
-    private void upload() {
-        if (uploadCriteria.canUpload(context, configuration.get())) {
+    private void upload(boolean isTimerExpired) {
+        if (uploadCriteria.canUpload(context, configuration.get(),isTimerExpired)) {
             uploadLocations();
             uploadCellular();
             uploadBattery();
@@ -651,7 +664,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
     private void configureLoggingRequiringPermissions() {
         PLog.i(TAG, "configureLoggingRequiringPermissions");
         configureLocationLogging();
-        configureCellularAndBatteryLogging();
+        configureTimer();
     }
 
     private void configureLocationLogging() {
@@ -668,12 +681,9 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         }
     }
 
-    private void configureCellularAndBatteryLogging() {
-        if (configuration.get().shouldLogCellular() || configuration.get().shouldLogBattery()) {
-            startLogTimer();
-        } else {
-            stopLogTimer();
-        }
+    private void configureTimer() {
+        // timer is always running because we are checking for upload
+        startTimer();
     }
 
     private void stopApiClient() {

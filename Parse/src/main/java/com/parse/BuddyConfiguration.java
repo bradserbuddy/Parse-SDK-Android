@@ -18,11 +18,13 @@ public class BuddyConfiguration {
     private boolean androidUploadCellular;
     private boolean androidUploadLocation;
     private boolean androidUploadBattery;
-    private long androidCellularLogTimeout;
+    private long androidCellularLogTimeoutMs;
     private long lastUploadedEpoch;
     private long androidActivityMonitoringTimeoutMs;
     private long commonBatteryPushBatchSize;
     private long androidBatteryLogTimeoutMs;
+    private long androidUploadTimeoutMinutes;
+    public static final String TAG = "com.parse.BuddyConfiguration";
 
     public long getCommonCellularPushBatchSize() {
         return commonCellularPushBatchSize;
@@ -32,22 +34,27 @@ public class BuddyConfiguration {
         this.commonCellularPushBatchSize = commonCellularPushBatchSize;
     }
 
-    public long getAndroidCellularLogTimeout() {
-        return androidCellularLogTimeout;
+    public long getAndroidCellularLogTimeoutMs() {
+        return androidCellularLogTimeoutMs;
     }
 
-    public long getAndroidLogTimeout() {
-        long timeout = androidCellularLogTimeout;
+    public long getAndroidTimeout() {
+        long timeout = androidCellularLogTimeoutMs;
 
-        if (androidBatteryLogTimeoutMs < androidCellularLogTimeout) {
+        if (androidBatteryLogTimeoutMs < androidCellularLogTimeoutMs) {
             timeout = androidBatteryLogTimeoutMs;
         }
 
+        long uploadTimeoutMs = androidUploadTimeoutMinutes*60*1000;
+        if (uploadTimeoutMs < timeout) {
+            timeout = uploadTimeoutMs;
+        }
+        PLog.i(TAG, "timer set to " + timeout);
         return timeout;
     }
 
-    public void setAndroidCellularLogTimeout(long androidCellularLogTimeout) {
-        this.androidCellularLogTimeout = androidCellularLogTimeout;
+    public void setAndroidCellularLogTimeoutMs(long androidCellularLogTimeoutMs) {
+        this.androidCellularLogTimeoutMs = androidCellularLogTimeoutMs;
     }
 
     public long getVersion() {
@@ -208,5 +215,13 @@ public class BuddyConfiguration {
 
     public void setAndroidBatteryLogTimeoutMs(long androidBatteryLogTimeoutMs) {
         this.androidBatteryLogTimeoutMs = androidBatteryLogTimeoutMs;
+    }
+
+    public long getAndroidUploadTimeoutMinutes() {
+        return androidUploadTimeoutMinutes;
+    }
+
+    public void setAndroidUploadTimeoutMinutes(long androidUploadTimeoutMinutes) {
+        this.androidUploadTimeoutMinutes = androidUploadTimeoutMinutes;
     }
 }

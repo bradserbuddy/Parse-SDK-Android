@@ -203,10 +203,10 @@ public class BuddyConfigurationTest {
         long commonCellularLogTimeout = 12;
 
         // act
-        configuration.setAndroidCellularLogTimeout(commonCellularLogTimeout);
+        configuration.setAndroidCellularLogTimeoutMs(commonCellularLogTimeout);
 
         // assert
-        assertEquals(commonCellularLogTimeout, configuration.getAndroidCellularLogTimeout());
+        assertEquals(commonCellularLogTimeout, configuration.getAndroidCellularLogTimeoutMs());
     }
 
     @Test

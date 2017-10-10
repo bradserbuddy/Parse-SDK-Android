@@ -220,7 +220,7 @@ public class BuddyPreferenceTest {
         BuddyConfiguration configuration = BuddyPreferences.getConfig(context);
 
         // assert
-        assertEquals(cellularLogTimeout, configuration.getAndroidCellularLogTimeout());
+        assertEquals(cellularLogTimeout, configuration.getAndroidCellularLogTimeoutMs());
     }
 
     @Test
@@ -310,7 +310,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getAndroidCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeoutMs());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -389,7 +389,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getAndroidCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeoutMs());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -485,7 +485,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getAndroidCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeoutMs());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -598,7 +598,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getAndroidCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeoutMs());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -711,7 +711,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getAndroidCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeoutMs());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -824,7 +824,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getAndroidCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeoutMs());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -939,7 +939,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getAndroidCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeoutMs());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -1069,7 +1069,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getAndroidCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeoutMs());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -1216,7 +1216,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getAndroidCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeoutMs());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -1363,7 +1363,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getAndroidCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeoutMs());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());
@@ -1510,7 +1510,7 @@ public class BuddyPreferenceTest {
         // assert
         assertEquals(100, configuration.getCommonLocationPushBatchSize());
         assertEquals(101, configuration.getCommonCellularPushBatchSize());
-        assertEquals(102, configuration.getAndroidCellularLogTimeout());
+        assertEquals(102, configuration.getAndroidCellularLogTimeoutMs());
         assertEquals(103, configuration.getCommonMaxLocationRecords());
         assertEquals(104, configuration.getCommonMaxCellularRecords());
         assertEquals(105, configuration.getCommonMaxErrorRecords());

@@ -27,4 +27,5 @@ public class BuddyPreferenceKeys {
     public static final String preferenceConfigModel = "model";
     public static final String preferenceConfigLogBattery = "log-battery";
     public static final String preferenceConfigUploadBattery = "upload-battery";
+    public static final String preferenceConfigUploadTimeoutMinutes = "upload-timeout-min";
 }
