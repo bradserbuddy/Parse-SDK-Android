@@ -161,7 +161,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             deviceInfoObject.put("sdkVersionNumber", Build.VERSION.SDK_INT);
             deviceInfoObject.put("deviceId", deviceId);
             deviceInfoObject.put("DeviceInfoPlatformOs", "Android");
-            deviceInfoObject.put("DeviceFamily", "phone");
+            deviceInfoObject.put("DeviceFamily", "mobile");
             deviceInfoObject.put("requestID", UUID.randomUUID().toString());
             deviceInfoObject.put("version", configuration.get().getVersion());
         } catch (JSONException e) {

@@ -247,4 +247,17 @@ public class BuddyConfigurationTest {
         // assert
         assertEquals(activityMonitorInterval, configuration.getAndroidActivityMonitoringTimeoutMs());
     }
+
+    @Test
+    public void testSetAndGetUploadTimeout() throws Exception {
+        // arrange
+        BuddyConfiguration configuration = new BuddyConfiguration();
+        long uploadTimeout = 10;
+
+        // act
+        configuration.setAndroidUploadTimeoutMinutes(uploadTimeout);
+
+        // assert
+        assertEquals(uploadTimeout, configuration.getAndroidUploadTimeoutMinutes());
+    }
 }
