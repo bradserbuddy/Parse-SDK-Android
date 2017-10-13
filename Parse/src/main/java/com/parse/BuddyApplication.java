@@ -40,7 +40,7 @@ public class BuddyApplication {
                 applicationsObject.put("deviceId", deviceId);
                 applicationsObject.put("RequestID", UUID.randomUUID().toString());
                 applicationsObject.put("version", version);
-                String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis());
+                String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis()/1000);
                 applicationsObject.put("timestamp", timestamp);
             } catch (JSONException e) {
                 BuddySqliteHelper.getInstance().logError(BuddyAltDataTracker.TAG, e);

@@ -166,8 +166,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             deviceInfoObject.put("DeviceFamily", "mobile");
             deviceInfoObject.put("requestID", UUID.randomUUID().toString());
             deviceInfoObject.put("version", configuration.get().getVersion());
-            String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis()/1000);
-            deviceInfoObject.put("timestamp", timestamp);
+            deviceInfoObject.put("timestamp", currentTimeInIso8601());
         } catch (JSONException e) {
             BuddySqliteHelper.getInstance().logError(TAG, e);
         }
@@ -206,8 +205,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 parametersObject.put("requestID", UUID.randomUUID().toString());
                 parametersObject.put("device_status", deviceStatus);
                 parametersObject.put("version", configuration.get().getVersion());
-                String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis()/1000);
-                parametersObject.put("timestamp", timestamp);
+                parametersObject.put("timestamp", currentTimeInIso8601());
 
                 BuddyMetaData.uploadMetaDataInBackground("location", parametersObject, new SaveCallback() {
                     @Override
@@ -332,6 +330,12 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
         });
     }
 
+    private String currentTimeInIso8601() {
+        long timestamp = currentTimeMillis()/1000;
+        String stringTimestamp = BuddySqliteHelper.epochTo8601(timestamp);
+        return stringTimestamp;
+    }
+
     private void uploadCellular(final int loopCount) {
         PLog.i(TAG, "Uploading cellular batch no. " + Integer.toString(loopCount));
         final JSONObject cellularInfoItems = BuddySqliteHelper.getInstance().get(BuddySqliteTableType.Cellular,
@@ -348,8 +352,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 parametersObject.put("requestID", UUID.randomUUID().toString());
                 parametersObject.put("cellular", items);
                 parametersObject.put("version", configuration.get().getVersion());
-                String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis()/1000);
-                parametersObject.put("timestamp", timestamp);
+                parametersObject.put("timestamp", currentTimeInIso8601());
 
                 BuddyMetaData.uploadMetaDataInBackground("cellular", parametersObject, new SaveCallback() {
                     @Override
@@ -403,8 +406,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 parametersObject.put("requestID", UUID.randomUUID().toString());
                 parametersObject.put("battery", items);
                 parametersObject.put("version", configuration.get().getVersion());
-                String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis()/1000);
-                parametersObject.put("timestamp", timestamp);
+                parametersObject.put("timestamp", currentTimeInIso8601());
 
                 BuddyMetaData.uploadMetaDataInBackground("battery", parametersObject, new SaveCallback() {
                     @Override
@@ -617,8 +619,7 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     parametersObject.put("deviceId", deviceId);
                     parametersObject.put("requestID", UUID.randomUUID().toString());
                     parametersObject.put("version", configuration.get().getVersion());
-                    String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis()/1000);
-                    parametersObject.put("timestamp", timestamp);
+                    parametersObject.put("timestamp", currentTimeInIso8601());
 
                     BuddyMetaData.uploadMetaDataInBackground("error", parametersObject, new SaveCallback() {
                         @Override
