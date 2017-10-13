@@ -40,6 +40,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static java.lang.System.currentTimeMillis;
+
 
 /**
  * Location tracking for apps.
@@ -164,6 +166,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
             deviceInfoObject.put("DeviceFamily", "mobile");
             deviceInfoObject.put("requestID", UUID.randomUUID().toString());
             deviceInfoObject.put("version", configuration.get().getVersion());
+            String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis()/1000);
+            deviceInfoObject.put("timestamp", timestamp);
         } catch (JSONException e) {
             BuddySqliteHelper.getInstance().logError(TAG, e);
         }
@@ -202,6 +206,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 parametersObject.put("requestID", UUID.randomUUID().toString());
                 parametersObject.put("device_status", deviceStatus);
                 parametersObject.put("version", configuration.get().getVersion());
+                String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis()/1000);
+                parametersObject.put("timestamp", timestamp);
 
                 BuddyMetaData.uploadMetaDataInBackground("location", parametersObject, new SaveCallback() {
                     @Override
@@ -342,6 +348,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 parametersObject.put("requestID", UUID.randomUUID().toString());
                 parametersObject.put("cellular", items);
                 parametersObject.put("version", configuration.get().getVersion());
+                String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis()/1000);
+                parametersObject.put("timestamp", timestamp);
 
                 BuddyMetaData.uploadMetaDataInBackground("cellular", parametersObject, new SaveCallback() {
                     @Override
@@ -395,6 +403,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                 parametersObject.put("requestID", UUID.randomUUID().toString());
                 parametersObject.put("battery", items);
                 parametersObject.put("version", configuration.get().getVersion());
+                String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis()/1000);
+                parametersObject.put("timestamp", timestamp);
 
                 BuddyMetaData.uploadMetaDataInBackground("battery", parametersObject, new SaveCallback() {
                     @Override
@@ -607,6 +617,8 @@ class BuddyAltDataTracker implements GoogleApiClient.ConnectionCallbacks, LostAp
                     parametersObject.put("deviceId", deviceId);
                     parametersObject.put("requestID", UUID.randomUUID().toString());
                     parametersObject.put("version", configuration.get().getVersion());
+                    String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis()/1000);
+                    parametersObject.put("timestamp", timestamp);
 
                     BuddyMetaData.uploadMetaDataInBackground("error", parametersObject, new SaveCallback() {
                         @Override

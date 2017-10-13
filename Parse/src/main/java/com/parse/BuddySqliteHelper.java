@@ -261,7 +261,7 @@ public class BuddySqliteHelper extends SQLiteOpenHelper {
 
         return result;
     }
-    private String epochTo8601(long epoch) {
+    public static String epochTo8601(long epoch) {
         Date date = new Date(epoch*1000);
         TimeZone tz = TimeZone.getTimeZone("UTC");
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
