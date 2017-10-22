@@ -103,6 +103,7 @@ class ParsePlugins {
                         Headers.Builder headersBuilder = request.headers().newBuilder()
                                 .set(ParseRESTCommand.HEADER_APPLICATION_ID, configuration.applicationId)
                                 .set(ParseRESTCommand.HEADER_CLIENT_VERSION, Parse.externalVersionName())
+                                .set(ParseRESTCommand.HEADER_CLIENT_PLATFORM, "Android")
                                 .set(ParseRESTCommand.HEADER_APP_BUILD_VERSION,
                                         String.valueOf(ManifestInfo.getVersionCode()))
                                 .set(ParseRESTCommand.HEADER_APP_DISPLAY_VERSION,

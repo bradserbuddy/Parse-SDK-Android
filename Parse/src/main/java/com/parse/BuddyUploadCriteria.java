@@ -12,7 +12,6 @@ class BuddyUploadCriteria {
     private BuddyCellularConnectivityStatus cellularConnectivityStatus = BuddyCellularConnectivityStatus.Unknown;
     private boolean hasEnoughBattery = false;
     private static int uploadJobsCount = 0;
-    private final int milliSecondsPerDay = 24 * 60 * 60 * 1000;
     public static final String TAG = "com.parse.BuddyUploadCriteria";
 
     BuddyUploadCriteria ()
@@ -75,19 +74,35 @@ class BuddyUploadCriteria {
         powerStatus = status;
     }
 
-    public boolean canUpload(Context context, BuddyConfiguration configuration) {
+    public boolean canUpload(Context context, BuddyConfiguration configuration, boolean isTimerCheck) {
         boolean result = false;
         BuddyConnectivityStatus connectivityStatus = getConnectivityStatus();
 
         if (uploadJobsCount == 0) {
-            if ((powerStatus == BuddyPowerConnectionStatus.Connected && connectivityStatus == BuddyConnectivityStatus.Wifi) || (System.currentTimeMillis() > configuration.getLastUploadedEpoch() + milliSecondsPerDay && (connectivityStatus == BuddyConnectivityStatus.Wifi ||
-                    connectivityStatus == BuddyConnectivityStatus.Cellular || connectivityStatus == BuddyConnectivityStatus.CellularAndWifi) && (powerStatus == BuddyPowerConnectionStatus.Connected || getHasEnoughBattery(context)))) {
+            boolean isTimedout =  isUploadTimeExpired(context, configuration);
+
+            if ((isTimerCheck && isTimedout) || (!isTimerCheck && ((powerStatus == BuddyPowerConnectionStatus.Connected && connectivityStatus == BuddyConnectivityStatus.Wifi) || isTimedout))) {
                 // wifi and power connected, or
                 // long time since last upload, connected to network and power or has enough battery
                 result = true;
                 PLog.i(TAG, "in canUpload true");
             }
         }
+
+        return result;
+    }
+
+    public boolean isUploadTimeExpired(Context context, BuddyConfiguration configuration) {
+        BuddyConnectivityStatus connectivityStatus = getConnectivityStatus();
+        long uploadTimeoutMs = configuration.getAndroidUploadTimeoutMinutes()*60*1000; // mins*60*1000 ms
+
+        long current = System.currentTimeMillis();
+        long last = configuration.getLastUploadedEpoch();
+        boolean isTimedout = current > last + uploadTimeoutMs;
+        PLog.i(TAG, "last " + last + ", current " + current + " timeout " + uploadTimeoutMs);
+
+        boolean result = isTimedout && (connectivityStatus == BuddyConnectivityStatus.Wifi ||
+                    connectivityStatus == BuddyConnectivityStatus.Cellular || connectivityStatus == BuddyConnectivityStatus.CellularAndWifi) && (powerStatus == BuddyPowerConnectionStatus.Connected || getHasEnoughBattery(context));
 
         return result;
     }

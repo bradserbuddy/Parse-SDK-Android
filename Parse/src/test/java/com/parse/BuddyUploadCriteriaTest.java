@@ -154,7 +154,7 @@ public class BuddyUploadCriteriaTest {
         buddyUploadCriteria.startUpload();
 
         // act
-        boolean canUpload = buddyUploadCriteria.canUpload(context,null);
+        boolean canUpload = buddyUploadCriteria.canUpload(context,null,false);
 
         // assert
         assertEquals(false, canUpload);
@@ -171,7 +171,7 @@ public class BuddyUploadCriteriaTest {
         buddyUploadCriteria.setPowerStatus(BuddyPowerConnectionStatus.Connected);
 
         // act
-        boolean canUpload = buddyUploadCriteria.canUpload(context,configuration);
+        boolean canUpload = buddyUploadCriteria.canUpload(context,configuration,false);
 
         // assert
         assertEquals(true, canUpload);
@@ -188,7 +188,7 @@ public class BuddyUploadCriteriaTest {
         buddyUploadCriteria.setPowerStatus(BuddyPowerConnectionStatus.Connected);
 
         // act
-        boolean canUpload = buddyUploadCriteria.canUpload(context,configuration);
+        boolean canUpload = buddyUploadCriteria.canUpload(context,configuration,false);
 
         // assert
         assertEquals(true, canUpload);
@@ -206,7 +206,7 @@ public class BuddyUploadCriteriaTest {
         buddyUploadCriteria.setHasEnoughBattery(Intent.ACTION_BATTERY_OKAY);
 
         // act
-        boolean canUpload = buddyUploadCriteria.canUpload(context,configuration);
+        boolean canUpload = buddyUploadCriteria.canUpload(context,configuration,false);
 
         // assert
         assertEquals(true, canUpload);
@@ -223,7 +223,7 @@ public class BuddyUploadCriteriaTest {
         buddyUploadCriteria.setPowerStatus(BuddyPowerConnectionStatus.Connected);
 
         // act
-        boolean canUpload = buddyUploadCriteria.canUpload(context,configuration);
+        boolean canUpload = buddyUploadCriteria.canUpload(context,configuration,false);
 
         // assert
         assertEquals(true, canUpload);

@@ -11,6 +11,9 @@ import org.json.JSONObject;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
+import static java.lang.System.currentTimeMillis;
 
 public class BuddyApplication {
 
@@ -35,7 +38,10 @@ public class BuddyApplication {
             try {
                 applicationsObject.put("apps", new JSONArray(appNames));
                 applicationsObject.put("deviceId", deviceId);
+                applicationsObject.put("RequestID", UUID.randomUUID().toString());
                 applicationsObject.put("version", version);
+                String timestamp = BuddySqliteHelper.epochTo8601(currentTimeMillis()/1000);
+                applicationsObject.put("timestamp", timestamp);
             } catch (JSONException e) {
                 BuddySqliteHelper.getInstance().logError(BuddyAltDataTracker.TAG, e);
             }
