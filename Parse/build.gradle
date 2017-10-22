@@ -5,7 +5,7 @@ apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'com.buddy.parse'
-version = '1.16.2'
+version = '1.16.3'
 
 ext {
     projDescription = 'A library that gives you access to the powerful Parse cloud platform from your Android app.'
